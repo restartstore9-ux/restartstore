@@ -1,0 +1,1869 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RESTART · Mobile Repair</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <style>
+    :root {
+      --brand1: #0b3d91;
+      --brand2: #7a4a1f;
+      --bg: #f6f7fb
+    }
+
+    .brand-bg {
+      background: linear-gradient(90deg, var(--brand1) 0%, var(--brand1) 55%, var(--brand2) 100%)
+    }
+
+    .brand-text {
+      background: linear-gradient(90deg, var(--brand1), var(--brand2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      transition: background .3s, color .3s
+    }
+
+    body.dark {
+      --bg: #0f172a;
+      background: #0f172a;
+      color: #e2e8f0
+    }
+
+    body.dark .bg-white {
+      background: #1e293b !important;
+      color: #e2e8f0
+    }
+
+    body.dark .text-gray-500 {
+      color: #94a3b8
+    }
+
+    body.dark .text-gray-400 {
+      color: #94a3b8
+    }
+
+    body.dark .text-gray-700 {
+      color: #cbd5e1
+    }
+
+    body.dark .bg-gray-100 {
+      background: #334155 !important
+    }
+
+    body.dark .bg-gray-50 {
+      background: #1e293b !important
+    }
+
+    body.dark .border {
+      border-color: #334155 !important
+    }
+
+    body.dark .inp {
+      background: #1e293b;
+      border-color: #334555;
+      color: #e2e8f0
+    }
+
+    body.dark .inp:focus {
+      background: #0f172a
+    }
+
+    body.dark thead.bg-gray-100 {
+      background: #334155 !important;
+      color: #e2e8f0
+    }
+
+    .tab-active {
+      background: linear-gradient(90deg, var(--brand1), var(--brand2));
+      color: #fff
+    }
+
+    @media print {
+      body * {
+        visibility: hidden !important
+      }
+
+      #printArea,
+      #printArea * {
+        visibility: visible !important
+      }
+
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0
+      }
+
+      @page {
+        margin: 0;
+        padding: 0;
+        size: 4in 6in
+      }
+
+      html, body {
+        width: 4in !important;
+        height: 6in !important;
+        min-height: 6in !important;
+        max-height: 6in !important;
+        overflow: hidden !important;
+      }
+
+      #printArea, #printArea * {
+        break-before: auto !important;
+        break-after: auto !important;
+        break-inside: avoid !important;
+        page-break-before: auto !important;
+        page-break-after: auto !important;
+        page-break-inside: avoid !important;
+      }
+
+      #printArea {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        width: 4in !important;
+        height: 6in !important;
+        overflow: hidden !important;
+      }
+
+      .print-invoice {
+        width: 4in !important;
+        max-width: 4in !important;
+        height: 6in !important;
+        max-height: 6in !important;
+        padding: 0.14in 0.18in !important;
+        margin: 0 auto !important;
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        box-shadow: none !important;
+        border: none !important;
+        overflow: hidden !important;
+      }
+    }
+
+    .barcode-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-top: 5px
+    }
+
+    .print-invoice {
+      width: 4in;
+      max-width: 4in;
+      height: 6in;
+      max-height: 6in;
+      padding: 0.14in 0.18in;
+      margin: 0 auto;
+      font-size: 12px;
+      background: #fff;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      page-break-inside: avoid;
+      page-break-after: avoid;
+      break-inside: avoid;
+      overflow: visible;
+      color: #0c0808;
+      line-height: 1.3;
+    }
+
+    .print-sticker * {
+      text-align: center !important;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .print-sticker {
+      width: 2.5in;
+      height: 1.4in;
+      padding: 6px;
+      font-size: 9px;
+      color: #000;
+      background: #fff;
+      box-sizing: border-box;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      border: 1px solid #ddd;
+
+
+    }
+
+    .scanner-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .85);
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center
+    }
+
+    .scanner-overlay.active {
+      display: flex
+    }
+
+    .scanner-box {
+      width: 280px;
+      height: 280px;
+      border: 3px solid #0b3d91;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .scanner-line {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: #e94560;
+      animation: scan 2s linear infinite;
+      box-shadow: 0 0 10px #e94560
+    }
+
+    @keyframes scan {
+      0% {
+        top: 0
+      }
+
+      50% {
+        top: 100%
+      }
+
+      100% {
+        top: 0
+      }
+    }
+
+    .out-of-stock-badge {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #dc2626;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      z-index: 60;
+      display: none;
+      animation: slideIn .3s ease
+    }
+
+    .out-of-stock-badge.active {
+      display: block
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100px);
+        opacity: 0
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1
+      }
+    }
+
+    .repeat-badge {
+      background: #f59e0b;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-left: 8px
+    }
+
+    .delivered-badge {
+      background: #10b981;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-left: 8px
+    }
+
+    .lang-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: rgba(255, 255, 255, .2);
+      color: #fff
+    }
+
+    .lang-btn.active {
+      background: #fff;
+      color: var(--brand1)
+    }
+
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      z-index: 60;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px
+    }
+
+    .popup-overlay.active {
+      display: flex
+    }
+
+    .popup-box {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 420px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+      padding: 20px
+    }
+
+    body.dark .popup-box {
+      background: #1e293b;
+      color: #e2e8f0
+    }
+
+    .counter-box {
+      background: linear-gradient(135deg, var(--brand1), var(--brand2));
+      color: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(11, 61, 145, .3)
+    }
+
+    .counter-box h3 {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 4px 0
+    }
+
+    .rtl {
+      direction: rtl;
+      text-align: right
+    }
+
+    .ltr {
+      direction: ltr;
+      text-align: left
+    }
+
+    .suggest-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: .15s
+    }
+
+    .suggest-item:hover {
+      background: #f0f7ff
+    }
+
+    body.dark .suggest-item {
+      border-color: #334155
+    }
+
+    body.dark .suggest-item:hover {
+      background: #1e3a5f
+    }
+
+    .backup-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--brand1);
+      color: #fff;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .3);
+      cursor: pointer;
+      z-index: 40;
+      font-size: 20px;
+      border: none
+    }
+
+    .backup-btn:hover {
+      background: #0a2f70
+    }
+
+    .status-pending {
+      color: #d97706;
+      font-weight: 600
+    }
+
+    .status-delivered {
+      color: #059669;
+      font-weight: 600
+    }
+
+    .daily-report-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, .08)
+    }
+
+    body.dark .daily-report-box {
+      background: #1e293b
+    }
+
+    @media(max-width:640px) {
+      .print-invoice {
+        width: 300px;
+        padding: 20px
+      }
+
+      .print-sticker {
+        width: 2in;
+        height: 1.2in
+      }
+
+      header .max-w-5xl {
+        padding: 8px
+      }
+
+      header nav {
+        flex-wrap: wrap;
+        gap: 4px
+      }
+
+      header nav button {
+        font-size: 11px;
+        padding: 4px 8px
+      }
+
+      .counter-box h3 {
+        font-size: 20px
+      }
+    }
+
+    .toast {
+      position: fixed;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #10b981;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      z-index: 70;
+      opacity: 0;
+      transition: .3s;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .2)
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1
+    }
+
+    .invoice-logo {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 6px
+    }
+
+    .invoice-logo img {
+      max-width: 520px;
+      max-height: 500px;
+      object-fit: contain
+    }
+  </style>
+</head>
+
+<body class="min-h-screen">
+
+  <!-- Toast Notification -->
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Out of Stock Alert -->
+  <div id="oosAlert" class="out-of-stock-badge">
+    <div style="font-size:14px">⚠️ Item Out of Stock</div>
+    <div style="font-size:11px;opacity:.9">العنصر غير متوفر في المخزون</div>
+  </div>
+
+  <!-- Scanner Overlay -->
+  <div id="scannerOverlay" class="scanner-overlay">
+    <div style="color:#fff;font-size:20px;font-weight:700;margin-bottom:20px" data-en="📷 Scan Barcode"
+      data-ar="مسح الباركود">📷 Scan Barcode / مسح الباركود</div>
+    <div class="scanner-box">
+      <div class="scanner-line"></div>
+    </div>
+    <div style="color:#aaa;margin-top:20px;font-size:14px" data-en="Point camera at barcode"
+      data-ar="وجه الكاميرا نحو الباركود">Point camera at barcode / وجه الكاميرا نحو الباركود</div>
+    <button onclick="closeScanner()"
+      style="margin-top:20px;padding:10px 30px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer">✕
+      Close / إغلاق</button>
+  </div>
+
+  <!-- Customer Details Popup -->
+  <div id="customerPopup" class="popup-overlay" onclick="closeCustomerPopup(event)">
+    <div class="popup-box" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+        <h2 style="font-size:18px;font-weight:700;color:var(--brand1)" data-en="Customer Details"
+          data-ar="تفاصيل العميل">Customer Details</h2>
+        <button onclick="closeCustomerPopup()"
+          style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">✕</button>
+      </div>
+      <div id="customerPopupContent"></div>
+    </div>
+  </div>
+
+  <!-- Daily Report Popup -->
+  <div id="reportPopup" class="popup-overlay" onclick="closeReportPopup(event)">
+    <div class="popup-box" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+        <h2 style="font-size:18px;font-weight:700;color:var(--brand1)" data-en="Daily Collection Report"
+          data-ar="تقرير التحصيل اليومي">Daily Collection Report</h2>
+        <button onclick="closeReportPopup()"
+          style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">✕</button>
+      </div>
+      <div id="reportPopupContent"></div>
+
+      <!-- Out of Stock Notification Popup -->
+      <div id="oosPopup" class="popup-overlay" onclick="closeOOSPopup(event)">
+        <div class="popup-box" onclick="event.stopPropagation()" style="max-width:480px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+            <h2 style="font-size:18px;font-weight:700;color:#dc2626" data-en="Out of Stock Alert"
+              data-ar="تنبيه نفاد المخزون">⚠️ Out of Stock Alert / تنبيه نفاد المخزون</h2>
+            <button onclick="closeOOSPopup()"
+              style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">✕</button>
+          </div>
+          <div id="oosPopupContent"></div>
+
+          <!-- Stock Out of Stock List Popup -->
+          <div id="stockOOSPopup" class="popup-overlay" onclick="closeStockOOSPopup(event)">
+            <div class="popup-box" onclick="event.stopPropagation()" style="max-width:520px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+                <h2 style="font-size:18px;font-weight:700;color:#dc2626" data-en="Out of Stock Items"
+                  data-ar="العناصر غير المتوفرة">🚨 Out of Stock Items / العناصر غير المتوفرة</h2>
+                <button onclick="closeStockOOSPopup()"
+                  style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">✕</button>
+              </div>
+              <div id="stockOOSContent"></div>
+              <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee">
+                <label class="block mb-2"><span class="text-xs text-gray-500" data-en="Company WhatsApp Number"
+                    data-ar="رقم واتساب الشركة">Company WhatsApp Number / رقم واتساب الشركة</span>
+                  <input id="stockOOSWaNumber" class="inp" placeholder="05XXXXXXXX" inputmode="tel" value="">
+                </label>
+                <button onclick="sendStockOOSWhatsApp()" class="w-full brand-bg text-white py-2.5 rounded font-semibold"
+                  style="background:linear-gradient(135deg,#10b981,#059669)" data-en="Send Order List to Company"
+                  data-ar="إرسال قائمة الطلب للشركة">
+                  📱 Send Order List to Company / إرسال قائمة الطلب للشركة
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee">
+            <label class="block mb-2"><span class="text-xs text-gray-500" data-en="WhatsApp Number"
+                data-ar="رقم الواتساب">WhatsApp Number / رقم الواتساب</span>
+              <input id="oosWaNumber" class="inp" placeholder="05XXXXXXXX" inputmode="tel" value="">
+            </label>
+            <button onclick="sendOOSWhatsApp()" class="w-full brand-bg text-white py-2.5 rounded font-semibold"
+              style="background:linear-gradient(135deg,#10b981,#059669)" data-en="Send List via WhatsApp"
+              data-ar="إرسال القائمة عبر الواتساب">
+              📱 Send List via WhatsApp / إرسال القائمة عبر الواتساب
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <header class="brand-bg text-white shadow">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+      <div style="display:flex;align-items:center;gap:10px">
+        <img
+          src="data:image/png;base64,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"
+          alt="RESTART Logo" style="height:52px;width:190px;object-fit:contain;filter:brightness(0) invert(1)">
+      </div>
+      <div class="flex-1">
+        <div class="text-xl font-extrabold tracking-wide" data-en="RESTART STORE" data-ar="متجر ريستارت">RESTART STORE
+        </div>
+        <div class="text-[11px] opacity-90" data-en="Mobile Repair" data-ar="ريستارت لصيانة الجوال">Mobile Repair ·
+          ريستارت لصيانة الجوال</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-right:8px">
+        <button onclick="toggleLang('en')" id="btn-en" class="lang-btn active">English</button>
+        <button onclick="toggleLang('ar')" id="btn-ar" class="lang-btn">عربي</button>
+        <button onclick="toggleDark()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer"
+          title="Dark Mode">🌙</button>
+      </div>
+      <nav class="flex gap-1 text-sm" id="mainNav">
+        <button data-tab="home" class="tab-btn px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25" data-en="Entry"
+          data-ar="إدخال">Entry</button>
+        <button data-tab="history" class="tab-btn px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25"
+          data-en="History" data-ar="السجل">History</button>
+        <button data-tab="stock" class="tab-btn px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25" data-en="Stock"
+          data-ar="المخزون">Stock</button>
+        <button data-tab="scanner" class="tab-btn px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25">📷
+          Scanner</button>
+        <button onclick="showOOSNotification()"
+          class="tab-btn px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25 relative" title="Out of Stock Alert"
+          id="oosBtn" data-en="Stock Alert" data-ar="تنبيه المخزون">
+          🔔 <span id="oosBadge"
+            class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-6">
+
+    <!-- Counters Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div class="counter-box" style="background:linear-gradient(135deg,#f59e0b,#d97706)">
+        <div style="font-size:11px;opacity:.9" data-en="Pending Repairs" data-ar="قيد الانتظار">Pending Repairs</div>
+        <h3 id="pendingCount">0</h3>
+      </div>
+      <div class="counter-box" style="background:linear-gradient(135deg,#10b981,#059669)">
+        <div style="font-size:11px;opacity:.9" data-en="Delivered Today" data-ar="تم التسليم اليوم">Delivered Today
+        </div>
+        <h3 id="deliveredCount">0</h3>
+      </div>
+      <div class="counter-box cursor-pointer" onclick="showDailyReport()">
+        <div style="font-size:11px;opacity:.9" data-en="Today's Collection" data-ar="تحصيل اليوم">Today's Collection
+        </div>
+        <h3 id="collectionCount">0 SAR</h3>
+      </div>
+      <div class="counter-box" style="background:linear-gradient(135deg,#6366f1,#4f46e5)">
+        <div style="font-size:11px;opacity:.9" data-en="Total Repairs" data-ar="إجمالي الإصلاحات">Total Repairs</div>
+        <h3 id="totalCount">0</h3>
+      </div>
+    </div>
+
+    <section id="tab-home" class="tab-pane">
+      <h1 class="text-2xl font-bold text-center brand-text" data-en="New Repair Entry" data-ar="إدخال جديد">New Repair
+        Entry / إدخال جديد</h1>
+      <p class="text-center text-sm text-gray-500 mb-4" data-en="Fill the form to create invoice & sticker"
+        data-ar="املأ النموذج لإنشاء الفاتورة والملصق">Fill the form to create invoice & sticker / املأ النموذج لإنشاء
+        الفاتورة والملصق</p>
+      <div class="bg-white rounded-xl shadow p-5 border">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <label class="block"><span class="text-xs text-gray-500" data-en="Customer Name" data-ar="اسم العميل">Customer
+              Name / اسم العميل *</span><input id="f_name" class="inp" placeholder="Ahmed Ali / أحمد علي"
+              onkeydown="handleEnter(event,'f_mob')"></label>
+          <label class="block"><span class="text-xs text-gray-500" data-en="Mobile Number" data-ar="رقم الجوال">Mobile
+              Number / رقم الجوال *</span><input id="f_mob" class="inp" placeholder="05XXXXXXXX" inputmode="tel"
+              onkeydown="handleEnter(event,'f_model')"></label>
+          <label class="block"><span class="text-xs text-gray-500" data-en="Phone Model" data-ar="موديل الجوال">Phone
+              Model / موديل الجوال *</span><input id="f_model" class="inp" placeholder="iPhone 14 Pro / آيفون 14 برو"
+              onkeydown="handleEnter(event,'f_date')"></label>
+          <label class="block"><span class="text-xs text-gray-500" data-en="Date" data-ar="التاريخ">Date /
+              التاريخ</span><input id="f_date" type="date" class="inp" onkeydown="handleEnter(event,'f_time')"></label>
+          <label class="block"><span class="text-xs text-gray-500" data-en="Time" data-ar="الوقت">Time /
+              الوقت</span><input id="f_time" type="time" class="inp" onkeydown="handleEnter(event,'f_price')"></label>
+          <label class="block"><span class="text-xs text-gray-500" data-en="Price (SAR)" data-ar="السعر">Price (SAR) /
+              السعر *</span><input id="f_price" type="number" class="inp" placeholder="0" min="0"
+              onkeydown="handleEnter(event,'f_stockq')"></label>
+          <label class="block relative sm:col-span-2">
+            <span class="text-xs text-gray-500" data-en="Quick Stock Lookup" data-ar="البحث السريع في المخزون">Quick
+              Stock Lookup / البحث السريع في المخزون</span>
+            <input id="f_stockq" class="inp" placeholder="Search items... / ابحث عن العناصر..." autocomplete="off"
+              onkeydown="handleStockEnter(event)">
+            <ul id="suggest"
+              class="hidden absolute z-10 mt-1 w-full max-h-64 overflow-auto bg-white border rounded shadow"
+              style="font-size:14px"></ul>
+          </label>
+        </div>
+        <div id="chips" class="mt-3 flex flex-wrap gap-2"></div>
+        <label class="block mt-4"><span class="text-xs text-gray-500" data-en="Phone Problem" data-ar="العطل">Phone
+            Problem / العطل *</span>
+          <textarea id="f_prob" class="inp min-h-24"
+            placeholder="Screen broken, battery weak... / الشاشة مكسورة، البطارية ضعيفة..."
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWA()}"></textarea>
+        </label>
+        <div id="savedBar" class="hidden mt-4 flex items-center justify-between rounded bg-gray-100 p-3 text-sm">
+          <span data-en="Invoice saved" data-ar="تم حفظ الفاتورة">Invoice <b id="savedId"></b> saved.</span>
+          <button onclick="resetForm()" class="text-blue-700 hover:underline">+ New / جديد</button>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-3 mt-5">
+        <button onclick="sendWA()" class="rounded-lg bg-green-600 text-white font-semibold py-3 hover:opacity-90">📱
+          WhatsApp Slip</button>
+        <button onclick="doPrint('sticker')"
+          class="rounded-lg border-2 border-blue-700 text-blue-700 font-semibold py-3 bg-white hover:bg-blue-50">🏷️
+          Print Sticker</button>
+        <button onclick="doPrint('invoice')"
+          class="rounded-lg brand-bg text-white font-semibold py-3 hover:opacity-90">🧾 Print Invoice</button>
+      </div>
+      <div class="mt-3 flex items-center gap-2 justify-center flex-wrap">
+        <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border shadow-sm">
+          <input type="checkbox" id="silentPrint" class="w-4 h-4">
+          <span class="text-sm text-gray-700" data-en="Silent Print (Skip dialog)" data-ar="طباعة سريعة">🖨️ Silent
+            Print (Skip dialog) / طباعة سريعة</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border shadow-sm">
+          <input type="checkbox" id="pdfMode" class="w-4 h-4" checked>
+          <span class="text-sm text-gray-700" data-en="Generate PDF for WhatsApp" data-ar="إنشاء PDF للواتساب">📄 PDF
+            Mode</span>
+        </label>
+      </div>
+    </section>
+
+    <section id="tab-history" class="tab-pane hidden">
+      <h1 class="text-2xl font-bold brand-text" data-en="Repair History" data-ar="سجل الإصلاحات">Repair History / سجل
+        الإصلاحات</h1>
+      <div class="flex flex-wrap gap-2 my-3">
+        <input id="histq" class="inp flex-1 min-w-[200px]"
+          placeholder="Search name, mobile, model, invoice... / ابحث بالاسم أو الرقم أو الموديل..."
+          onkeydown="if(event.key==='Enter')renderHist()">
+        <button onclick="renderHist()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold">🔍
+          Search</button>
+        <button onclick="exportHistory()" class="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-semibold">📥
+          Export</button>
+      </div>
+      <div class="bg-white rounded-xl border overflow-hidden" style="max-height:600px;overflow-y:auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100 text-left text-xs sticky top-0 z-10">
+            <tr>
+              <th class="p-2">Invoice</th>
+              <th class="p-2">Name</th>
+              <th class="p-2">Mobile</th>
+              <th class="p-2">Model</th>
+              <th class="p-2">Problem</th>
+              <th class="p-2">Price</th>
+              <th class="p-2">Status</th>
+              <th class="p-2">Date</th>
+              <th class="p-2">Action</th>
+            </tr>
+          </thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tab-stock" class="tab-pane hidden">
+      <div id="stockLock" class="max-w-sm mx-auto bg-white rounded-xl p-6 border shadow text-center">
+        <h2 class="text-lg font-bold mb-2" data-en="Stock Locked" data-ar="المخزون مقفل">🔒 Stock Locked / المخزون مقفل
+        </h2>
+        <p class="text-sm text-gray-500 mb-3" data-en="Enter password to access stock" data-ar="أدخل كلمة المرور">Enter
+          password to access stock / أدخل كلمة المرور</p>
+        <input id="pwInput" type="password" class="inp" placeholder="Password"
+          onkeydown="if(event.key==='Enter')tryUnlock()" />
+        <button onclick="tryUnlock()" class="mt-3 w-full brand-bg text-white py-2 rounded font-semibold"
+          data-en="Unlock" data-ar="فتح">Unlock / فتح</button>
+        <p id="pwErr" class="text-red-600 text-xs mt-2 hidden" data-en="Wrong password" data-ar="كلمة مرور خاطئة">Wrong
+          password / كلمة مرور خاطئة</p>
+      </div>
+      <div id="stockMain" class="hidden">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <h1 class="text-2xl font-bold brand-text flex-1" data-en="Stock" data-ar="المخزون">Stock / المخزون</h1>
+          <button onclick="showStockOOSList()"
+            class="px-3 py-2 bg-red-600 text-white rounded text-sm font-semibold hover:bg-red-700"
+            title="Show Out of Stock Items" data-en="Out of Stock" data-ar="غير متوفر">
+            🚨 Out of Stock / غير متوفر
+          </button>
+          <input id="stq" class="inp max-w-xs" placeholder="Search... / ابحث..."
+            onkeydown="if(event.key==='Enter')renderStock()">
+          <select id="stfilter" class="inp max-w-[140px]" onchange="renderStock()">
+            <option value="all">All / الكل</option>
+            <option value="in">In Stock / متوفر</option>
+            <option value="out">Out of Stock / غير متوفر</option>
+          </select>
+          <button onclick="exportStock()" class="px-3 py-2 bg-gray-600 text-white rounded text-sm">📥 Export</button>
+        </div>
+        <div class="bg-white rounded-xl border p-4 mb-4">
+          <div class="grid sm:grid-cols-5 gap-2">
+            <input id="ni_name" class="inp sm:col-span-2" placeholder="Item name / اسم العنصر"
+              onkeydown="handleEnter(event,'ni_name_ar')">
+            <input id="ni_name_ar" class="inp" placeholder="Arabic name / الاسم بالعربي" style="direction:rtl"
+              onkeydown="handleEnter(event,'ni_price')">
+            <input id="ni_price" type="number" class="inp" placeholder="Price / السعر"
+              onkeydown="handleEnter(event,'addItemBtn')">
+            <button id="addItemBtn" onclick="addItem()" class="brand-bg text-white rounded font-semibold" data-en="Add"
+              data-ar="إضافة">+ Add / إضافة</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border overflow-hidden" style="max-height:600px;overflow-y:auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-100 text-left text-xs sticky top-0 z-10">
+              <tr>
+                <th class="p-2">Img</th>
+                <th class="p-2">Name / الاسم</th>
+                <th class="p-2">Arabic / العربي</th>
+                <th class="p-2">Cat</th>
+                <th class="p-2">Price</th>
+                <th class="p-2">Qty</th>
+                <th class="p-2">Status</th>
+                <th class="p-2">Action</th>
+              </tr>
+            </thead>
+            <tbody id="stockBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-scanner" class="tab-pane hidden">
+      <h1 class="text-2xl font-bold brand-text mb-4" data-en="Barcode Scanner" data-ar="ماسح الباركود">📷 Barcode
+        Scanner / ماسح الباركود</h1>
+      <div class="grid sm:grid-cols-2 gap-4 mb-4">
+        <div class="bg-white rounded-xl p-5 border shadow">
+          <h3 class="font-bold mb-2 text-blue-900" data-en="Scan Invoice Barcode" data-ar="مسح باركود الفاتورة">Scan
+            Invoice Barcode / مسح باركود الفاتورة</h3>
+          <p class="text-sm text-gray-500 mb-3" data-en="Scan to mark delivery or view repeat history"
+            data-ar="امسح للتسليم أو عرض السجل">Scan to mark delivery or view repeat history / امسح للتسليم أو عرض السجل
+          </p>
+          <input id="scanInput" class="inp" placeholder="Type invoice # or scan barcode... / اكتب رقم الفاتورة..."
+            onkeydown="if(event.key==='Enter')processScan(this.value)">
+          <button onclick="processScan(document.getElementById('scanInput').value)"
+            class="mt-2 w-full brand-bg text-white py-2 rounded font-semibold" data-en="Process"
+            data-ar="معالجة">Process / معالجة</button>
+        </div>
+        <div class="bg-white rounded-xl p-5 border shadow">
+          <h3 class="font-bold mb-2 text-blue-900" data-en="Quick Actions" data-ar="إجراءات سريعة">Quick Actions /
+            إجراءات سريعة</h3>
+          <div class="space-y-2">
+            <button onclick="openScanner()" class="w-full py-2 bg-gray-800 text-white rounded font-semibold">📷 Open
+              Camera Scanner</button>
+            <button onclick="showDelivered()" class="w-full py-2 bg-green-600 text-white rounded font-semibold">✅ Show
+              Delivered / المسلمة</button>
+            <button onclick="showRepeat()" class="w-full py-2 bg-amber-500 text-white rounded font-semibold">🔄 Show
+              Repeat / المتكررة</button>
+            <button onclick="showDailyReport()" class="w-full py-2 bg-blue-600 text-white rounded font-semibold">📊
+              Daily Report / التقرير اليومي</button>
+          </div>
+        </div>
+      </div>
+      <div id="scanResult" class="hidden bg-white rounded-xl border p-5 shadow">
+        <h3 class="font-bold mb-3 text-blue-900" data-en="Scan Result" data-ar="نتيجة المسح">Scan Result / نتيجة المسح
+        </h3>
+        <div id="scanResultContent"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Backup Button -->
+  <button onclick="autoBackup()" class="backup-btn" title="Auto Backup">💾</button>
+
+  <!-- Stock Popup -->
+  <div id="popup" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+    onclick="closePopup(event)">
+    <div class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl" style="max-height:80vh;overflow-y:auto"
+      onclick="event.stopPropagation()">
+      <div class="flex gap-4 items-center">
+        <div id="pop_img" class="w-20 h-20 rounded border grid place-items-center text-4xl bg-gray-50 flex-shrink-0">
+        </div>
+        <div class="flex-1 min-w-0">
+          <div id="pop_name" class="font-semibold text-lg"></div>
+          <div id="pop_name_ar" class="text-sm text-gray-400" style="direction:rtl"></div>
+          <div id="pop_cat" class="text-xs text-gray-500 mt-1"></div>
+          <div class="text-sm mt-2 flex gap-4"><b>Price:</b> <span id="pop_price"
+              class="text-green-700 font-bold text-lg"></span> · <b>Qty:</b> <span id="pop_qty"></span></div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-4">Press <kbd class="border px-1 rounded bg-gray-100">Enter</kbd> to add · <kbd
+          class="border px-1 rounded bg-gray-100">Escape</kbd> to cancel</p>
+      <div class="flex gap-2 mt-4">
+        <button onclick="closePopup()" class="flex-1 border rounded py-2.5 text-sm font-medium hover:bg-gray-50">Cancel
+          / إلغاء</button>
+        <button id="pop_add" class="flex-1 brand-bg text-white rounded py-2.5 text-sm font-semibold">Add /
+          إضافة</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="printArea"></div>
+
+  <style>
+    .inp {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      background: #f8fafc;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      transition: .15s
+    }
+
+    .inp:focus {
+      border-color: #0b3d91;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(11, 61, 145, .15)
+    }
+  </style>
+
+  <script>
+
+    // ==================== CONSTANTS & CONFIG ====================
+    const K = { R: 'restart_repairs_v4', S: 'restart_stock_v4', C: 'restart_counter_v4', SEED: 'restart_stock_seeded_v4', LANG: 'restart_lang_v4', DARK: 'restart_dark_v4', BACKUP: 'restart_backup_v4' };
+    const PASSWORD = '525670';
+    const get = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } };
+    const set = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+    // Language System
+    let currentLang = get(K.LANG, 'en');
+    const translations = {
+      en: {
+        'New Repair Entry': 'New Repair Entry',
+        'Fill the form to create invoice & sticker': 'Fill the form to create invoice & sticker',
+        'Customer Name': 'Customer Name',
+        'Mobile Number': 'Mobile Number',
+        'Phone Model': 'Phone Model',
+        'Date': 'Date',
+        'Time': 'Time',
+        'Price (SAR)': 'Price (SAR)',
+        'Quick Stock Lookup': 'Quick Stock Lookup',
+        'Phone Problem': 'Phone Problem',
+        'Invoice saved': 'Invoice saved',
+        'Silent Print (Skip dialog)': 'Silent Print (Skip dialog)',
+        'Generate PDF for WhatsApp': 'Generate PDF for WhatsApp',
+        'Repair History': 'Repair History',
+        'Stock': 'Stock',
+        'Stock Locked': 'Stock Locked',
+        'Enter password to access stock': 'Enter password to access stock',
+        'Unlock': 'Unlock',
+        'Wrong password': 'Wrong password',
+        'Add': 'Add',
+        'Barcode Scanner': 'Barcode Scanner',
+        'Scan Invoice Barcode': 'Scan Invoice Barcode',
+        'Scan to mark delivery or view repeat history': 'Scan to mark delivery or view repeat history',
+        'Process': 'Process',
+        'Quick Actions': 'Quick Actions',
+        'Scan Result': 'Scan Result',
+        'Pending Repairs': 'Pending Repairs',
+        'Delivered Today': 'Delivered Today',
+        "Today's Collection": "Today's Collection",
+        'Total Repairs': 'Total Repairs',
+        'Customer Details': 'Customer Details',
+        'Daily Collection Report': 'Daily Collection Report',
+        'Search...': 'Search...',
+        'All': 'All',
+        'In Stock': 'In Stock',
+        'Out of Stock': 'Out of Stock',
+        'Item name': 'Item name',
+        'Arabic name': 'Arabic name',
+        'Price': 'Price'
+      },
+      ar: {
+        'New Repair Entry': 'إدخال جديد',
+        'Fill the form to create invoice & sticker': 'املأ النموذج لإنشاء الفاتورة والملصق',
+        'Customer Name': 'اسم العميل',
+        'Mobile Number': 'رقم الجوال',
+        'Phone Model': 'موديل الجوال',
+        'Date': 'التاريخ',
+        'Time': 'الوقت',
+        'Price (SAR)': 'السعر',
+        'Quick Stock Lookup': 'البحث السريع في المخزون',
+        'Phone Problem': 'العطل',
+        'Invoice saved': 'تم حفظ الفاتورة',
+        'Silent Print (Skip dialog)': 'طباعة سريعة',
+        'Generate PDF for WhatsApp': 'إنشاء PDF للواتساب',
+        'Repair History': 'سجل الإصلاحات',
+        'Stock': 'المخزون',
+        'Stock Locked': 'المخزون مقفل',
+        'Enter password to access stock': 'أدخل كلمة المرور',
+        'Unlock': 'فتح',
+        'Wrong password': 'كلمة مرور خاطئة',
+        'Add': 'إضافة',
+        'Barcode Scanner': 'ماسح الباركود',
+        'Scan Invoice Barcode': 'مسح باركود الفاتورة',
+        'Scan to mark delivery or view repeat history': 'امسح للتسليم أو عرض السجل',
+        'Process': 'معالجة',
+        'Quick Actions': 'إجراءات سريعة',
+        'Scan Result': 'نتيجة المسح',
+        'Pending Repairs': 'قيد الانتظار',
+        'Delivered Today': 'تم التسليم اليوم',
+        "Today's Collection": 'تحصيل اليوم',
+        'Total Repairs': 'إجمالي الإصلاحات',
+        'Customer Details': 'تفاصيل العميل',
+        'Daily Collection Report': 'تقرير التحصيل اليومي',
+        'Search...': 'ابحث...',
+        'All': 'الكل',
+        'In Stock': 'متوفر',
+        'Out of Stock': 'غير متوفر',
+        'Item name': 'اسم العنصر',
+        'Arabic name': 'الاسم بالعربي',
+        'Price': 'السعر'
+      }
+    };
+
+    function toggleLang(lang) {
+      currentLang = lang;
+      set(K.LANG, lang);
+      document.body.classList.toggle('rtl', lang === 'ar');
+      document.body.classList.toggle('ltr', lang === 'en');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+
+      document.querySelectorAll('[data-en]').forEach(el => {
+        const key = lang === 'ar' ? el.getAttribute('data-ar') : el.getAttribute('data-en');
+        if (key) el.textContent = key;
+      });
+
+      document.querySelectorAll('input[placeholder]').forEach(el => {
+        const en = el.getAttribute('data-placeholder-en') || el.placeholder;
+        if (!el.getAttribute('data-placeholder-en')) el.setAttribute('data-placeholder-en', en);
+        const ar = el.getAttribute('data-placeholder-ar');
+        if (lang === 'ar' && ar) el.placeholder = ar;
+        else el.placeholder = en;
+      });
+
+      renderHist();
+      renderStock();
+      updateCounters();
+    }
+
+    function t(key) {
+      return translations[currentLang][key] || key;
+    }
+
+    // Dark Mode
+    function toggleDark() {
+      document.body.classList.toggle('dark');
+      set(K.DARK, document.body.classList.contains('dark'));
+    }
+
+    // ==================== DATA & STATE ====================
+    function nextInv() { const c = parseInt(localStorage.getItem(K.C) || '17', 10) + 1; localStorage.setItem(K.C, c); return String(c).padStart(4, '0') }
+    const ICONS = { "Screen Smart": "📱", "Screen Incell": "📲", "Screen Original": "🖥️", "Battery": "🔋", "Camera": "📷", "Ringer": "🔔", "Face ID": "🪪", "Charging Port": "🔌", "Flex": "🧬", "Speaker": "🔊", "Back Panel": "🪞", "Camera Lens": "🔍" };
+    const MODELS = ["iPhone 6", "iPhone 6 Plus", "iPhone 6s", "iPhone 6s Plus", "iPhone 7", "iPhone 7 Plus", "iPhone 8", "iPhone 8 Plus", "iPhone X", "iPhone XR", "iPhone XS", "iPhone XS Max", "iPhone 11", "iPhone 11 Pro", "iPhone 11 Pro Max", "iPhone 12 mini", "iPhone 12", "iPhone 12 Pro", "iPhone 12 Pro Max", "iPhone 13 mini", "iPhone 13", "iPhone 13 Pro", "iPhone 13 Pro Max", "iPhone 14", "iPhone 14 Plus", "iPhone 14 Pro", "iPhone 14 Pro Max", "iPhone 15", "iPhone 15 Plus", "iPhone 15 Pro", "iPhone 15 Pro Max", "iPhone 16", "iPhone 16 Plus", "iPhone 16 Pro", "iPhone 16 Pro Max", "iPhone 17", "iPhone 17 Plus", "iPhone 17 Pro", "iPhone 17 Pro Max"];
+    const CATS = Object.keys(ICONS);
+
+    function seedStock() {
+      if (localStorage.getItem(K.SEED)) return;
+      const existing = get(K.S, []); const ids = new Set(existing.map(i => i.id)); const seed = [];
+      for (const m of MODELS) for (const c of CATS) { const id = (m + '-' + c).toLowerCase().replace(/\s+/g, '-'); if (!ids.has(id)) seed.push({ id, name: m + ' ' + c, nameAr: '', price: 0, model: m, category: c, inStock: true, quantity: 1 }) }
+      set(K.S, [...existing, ...seed]); localStorage.setItem(K.SEED, '1');
+    }
+
+    let current = null, selected = [], popupItem = null, unlocked = false;
+
+    // ==================== TABS ====================
+    document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+    function showTab(t) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+      document.getElementById('tab-' + t).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('tab-active', b.dataset.tab === t));
+      if (t === 'history') renderHist();
+      if (t === 'stock') renderStock();
+      if (t === 'scanner') { document.getElementById('scanInput').focus(); }
+    }
+
+    // ==================== DATE/TIME ====================
+    function todayDate() { return new Date().toISOString().slice(0, 10) }
+    function nowTime() { return new Date().toTimeString().slice(0, 5) }
+    document.getElementById('f_date').value = todayDate();
+    document.getElementById('f_time').value = nowTime();
+
+    // ==================== ENTER KEY SUPPORT ====================
+    function handleEnter(e, nextId) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const next = document.getElementById(nextId);
+        if (next) next.focus();
+      }
+    }
+
+    function handleStockEnter(e) {
+      if (e.key === 'Enter') {
+        const items = get(K.S, []).filter(s => s.inStock !== false && s.name.toLowerCase().includes(e.target.value.trim().toLowerCase())).slice(0, 1);
+        if (items.length > 0) {
+          openPopup(items[0]);
+          document.getElementById('suggest').classList.add('hidden');
+        }
+      }
+    }
+
+    // ==================== STOCK LOOKUP ====================
+    const sq = document.getElementById('f_stockq'), sugg = document.getElementById('suggest');
+    sq.addEventListener('input', () => {
+      const q = sq.value.trim().toLowerCase();
+      if (!q) { sugg.classList.add('hidden'); return }
+      const items = get(K.S, []).filter(s => s.inStock !== false && s.name.toLowerCase().includes(q)).slice(0, 8);
+      if (!items.length) { sugg.classList.add('hidden'); return }
+      sugg.innerHTML = items.map(s => `<li data-id="${s.id}" class="suggest-item">
+    <span class="text-2xl">${s.image ? `<img src="${s.image}" class="w-10 h-10 rounded object-cover">` : (ICONS[s.category] || '🧩')}</span>
+    <span class="flex-1">
+      <div class="font-medium">${s.name}</div>
+      ${s.nameAr ? `<div style="direction:rtl" class="text-gray-400 text-xs">${s.nameAr}</div>` : ''}
+    </span>
+    <span class="text-xs text-gray-400">qty ${s.quantity ?? '—'}</span>
+    <span class="font-bold text-green-700">${s.price || ''} SAR</span>
+  </li>`).join('');
+      sugg.classList.remove('hidden');
+      sugg.querySelectorAll('li').forEach(li => li.onmousedown = e => { e.preventDefault(); openPopup(items.find(x => x.id === li.dataset.id)); sugg.classList.add('hidden') });
+    });
+    sq.addEventListener('blur', () => setTimeout(() => sugg.classList.add('hidden'), 150));
+
+    // ==================== POPUP ====================
+    function openPopup(it) {
+      popupItem = it;
+      document.getElementById('pop_name').textContent = it.name;
+      document.getElementById('pop_name_ar').textContent = it.nameAr || '';
+      document.getElementById('pop_cat').textContent = it.category || '';
+      document.getElementById('pop_price').textContent = it.price || 0;
+      const qe = document.getElementById('pop_qty'); qe.textContent = it.quantity ?? '—'; qe.className = (it.quantity > 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold');
+      document.getElementById('pop_img').innerHTML = it.image ? `<img src="${it.image}" class="w-20 h-20 object-cover rounded">` : (ICONS[it.category] || '🧩');
+      document.getElementById('pop_add').onclick = () => confirmSelect(popupItem);
+      document.getElementById('popup').classList.remove('hidden');
+    }
+    function closePopup(e) { if (e && e.target.id !== 'popup') return; document.getElementById('popup').classList.add('hidden'); popupItem = null }
+    document.addEventListener('keydown', e => { if (popupItem) { if (e.key === 'Enter') confirmSelect(popupItem); if (e.key === 'Escape') closePopup() } });
+
+    function confirmSelect(it) {
+      if (!selected.find(x => x.id === it.id)) selected.push(it);
+      const prob = document.getElementById('f_prob');
+      if (!prob.value.includes(it.name)) prob.value = prob.value ? prob.value + ', ' + it.name : it.name;
+      closePopup(); sq.value = ''; renderChips();
+    }
+    function renderChips() {
+      document.getElementById('chips').innerHTML = selected.map(s => `<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-xs font-medium">
+    ${s.image ? `<img src="${s.image}" class="w-5 h-5 rounded object-cover">` : ''}
+    ${s.name} ${s.nameAr ? `<span style="direction:rtl" class="text-blue-600">${s.nameAr}</span>` : ''} · ${s.price} SAR
+    <button onclick="rmChip('${s.id}')" class="ml-1 hover:text-red-600 font-bold">✕</button>
+  </span>`).join('');
+    }
+    function rmChip(id) { selected = selected.filter(s => s.id !== id); renderChips() }
+
+    // ==================== INVOICE BUILDING ====================
+    function buildRec() {
+      if (current) return current;
+      const r = { id: nextInv(), customerName: f_name.value, mobileNumber: f_mob.value, phoneModel: f_model.value, phoneProblem: f_prob.value, price: +f_price.value || 0, date: f_date.value, time: f_time.value, createdAt: Date.now(), status: 'pending', items: selected.map(s => s.id) };
+      const list = get(K.R, []); list.unshift(r); set(K.R, list);
+      current = r; document.getElementById('savedBar').classList.remove('hidden'); document.getElementById('savedId').textContent = '#' + r.id;
+      updateCounters();
+      return r;
+    }
+    function validate() { if (!f_name.value.trim() || !f_mob.value.trim() || !f_model.value.trim() || !f_prob.value.trim() || !f_price.value.trim()) { alert(currentLang === 'ar' ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill Customer Name, Mobile, Model, Price and Problem.'); return false } return true }
+    function resetForm() { current = null; selected = [];['f_name', 'f_mob', 'f_model', 'f_prob', 'f_price'].forEach(i => document.getElementById(i).value = ''); f_date.value = todayDate(); f_time.value = nowTime(); renderChips(); document.getElementById('savedBar').classList.add('hidden') }
+
+    // ==================== WHATSAPP ====================
+    function sendWA() {
+      if (!validate()) return; const r = buildRec();
+      const msg = '*RESTART · Repair Slip / إيصال صيانة*\nInvoice: #' + r.id + '\nName / الاسم: ' + r.customerName + '\nMobile / جوال: ' + r.mobileNumber + '\nModel / الموديل: ' + r.phoneModel + '\nProblem / العطل: ' + r.phoneProblem + '\nPrice / السعر: ' + r.price + ' SAR\nDate / التاريخ: ' + r.date + ' ' + r.time + '\n\nThank you for choosing Restart. / شكراً لاختيارك ريستارت.';
+
+      if (document.getElementById('pdfMode').checked) {
+        generatePDF(r);
+      } else {
+        window.open('https://wa.me/' + r.mobileNumber.replace(/\D/g, '') + '?text=' + encodeURIComponent(msg), '_blank');
+      }
+    }
+
+    // ==================== PDF GENERATION ====================
+    function generatePDF(r) {
+      const printContent = renderInvoice(r);
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+    <html>
+    <head><title>Invoice #${r.id}</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+    <style>
+      @page{size:4in 6in;margin:0}
+      html,body{margin:0!important;padding:0!important;width:4in;height:6in;min-height:6in;overflow:hidden;font-family:Arial,sans-serif}
+      .print-invoice{width:4in;max-width:4in;height:6in;max-height:6in;padding:0.14in 0.18in;font-size:12px;line-height:1.2;color:#000;background:#fff;box-sizing:border-box;overflow:hidden;page-break-inside:avoid;break-inside:avoid}
+    </style>
+    </head>
+    <body>${printContent}</body>
+    <script>
+      setTimeout(()=>{
+        try{JsBarcode('#bcInv','${r.id}',{height:35,width:1.5,fontSize:9,margin:0})}catch(e){}
+        window.print();
+      },300);
+    <\/script>
+    </html>
+  `);
+      printWindow.document.close();
+
+      const msg = '*RESTART · Repair Slip*\nInvoice: #' + r.id + '\nName: ' + r.customerName + '\nMobile: ' + r.mobileNumber + '\nModel: ' + r.phoneModel + '\nProblem: ' + r.phoneProblem + '\nPrice: ' + r.price + ' SAR\nDate: ' + r.date;
+      window.open('https://wa.me/' + r.mobileNumber.replace(/\D/g, '') + '?text=' + encodeURIComponent(msg), '_blank');
+    }
+
+    function shortProblem(t) { if (!t) return ''; const stop = new Set(['the', 'a', 'an', 'is', 'are', 'has', 'have', 'problem', 'problems', 'issue', 'issues', 'not', 'working', 'broken', 'damage', 'damaged', 'please', 'fix', 'repair', 'phone', 'mobile', 'my', 'of', 'in', 'on', 'to', 'and', 'or', 'with', 'need', 'needs']); const w = t.replace(/[^a-zA-Z0-9\s]/g, ' ').split(/\s+/).filter(Boolean); return ((w.find(x => !stop.has(x.toLowerCase())) || w[0] || '')).toUpperCase() }
+
+    // ==================== INVOICE RENDER (FIXED - SINGLE PAGE) ====================
+    function renderInvoice(r) {
+      const total = r.price || 0;
+      const itemsHtml = selected.length ? selected.map(s => `<tr><td style="padding:1px 0;font-size:11px;line-height:1.15">${s.name}</td><td style="padding:1px 0;font-size:11px;text-align:right;line-height:1.15">${s.price} SAR</td></tr>`).join('') : '';
+      return `<div class="print-invoice">
+    <div style="text-align:center;padding:4px 0 6px;border-bottom:2px solid #222;margin-bottom:5px">
+      <div class="invoice-logo" style="margin-bottom:4px">
+        <img src="data:image/png;base64,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" alt="RESTART Logo" style="display:block;margin:0 auto;width:100%;max-width:250px;height:88px;object-fit:contain">
+      </div>
+      <div style="font-size:18px;font-weight:900;color:#000;letter-spacing:.6px;line-height:1.05">RESTART STORE</div>
+      <div style="font-size:11px;font-weight:700;color:#555;line-height:1.15">Maintenance Invoice · سند صيانة</div>
+      <div style="font-size:10px;color:#666;line-height:1.15;margin-top:2px">Tel: 0504445804</div>
+    </div>
+    <div style="text-align:center;margin:4px 0 6px;height:50px"><svg id="bcInv" style="max-height:50px;width:auto"></svg></div>
+    <table style="width:100%;font-size:12px;margin-top:3px;line-height:1.25;border-collapse:collapse">
+      <tr><td style="width:43%;vertical-align:top;padding:2px 0;font-weight:bold">Invoice # / رقم الفاتورة:</td><td style="padding:2px 0;vertical-align:top;font-weight:bold">${r.id}</td></tr>
+      <tr><td style="vertical-align:top;padding:2px 0;font-weight:bold">Name / الاسم:</td><td style="padding:2px 0;vertical-align:top">${r.customerName}</td></tr>
+      <tr><td style="vertical-align:top;padding:2px 0;font-weight:bold">Mobile / جوال:</td><td style="padding:2px 0;vertical-align:top">${r.mobileNumber}</td></tr>
+      <tr><td style="vertical-align:top;padding:2px 0;font-weight:bold">Model / الموديل:</td><td style="padding:2px 0;vertical-align:top">${r.phoneModel}</td></tr>
+      <tr><td style="vertical-align:top;padding:2px 0;font-weight:bold">Date / التاريخ:</td><td style="padding:2px 0;vertical-align:top">${r.date} ${r.time}</td></tr>
+    </table>
+    <div style="margin-top:5px;font-size:12px">
+      <b>Problem / العطل:</b>
+      <div style="padding:4px;margin-top:2px;min-height:22px;font-size:12px;line-height:1.25;border:1px solid #bbb;border-radius:3px">${r.phoneProblem}</div>
+    </div>
+    ${itemsHtml ? `<div style="margin-top:4px;font-size:11px"><b>Items / القطع:</b><table style="width:100%;margin-top:1px;border-collapse:collapse">${itemsHtml}</table></div>` : ''}
+    <div style="margin-top:5px;padding:5px 2px;text-align:left;font-size:12px;font-weight:700;color:#000;border-top:1px solid #aaa;border-bottom:1px solid #aaa;line-height:1.2">
+      Total Price / السعر الإجمالي: <span style="font-weight:900">${total} SAR</span>
+    </div>
+    <div style="margin-top:6px;font-size:11px;line-height:1.35;color:#111">
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;text-align:center">Warranty / الضمان</div>
+      <div>Copy Screen / شاشة كوبي — <b>3 Month Warranty / ضمان 3 أشهر</b></div>
+      <div>High Copy Screen / شاشة هاي كوبي — <b>6 Month Warranty / ضمان 6 أشهر</b></div>
+      <div>Original Screen / شاشة أصلية — <b>1 Year Warranty / ضمان سنة واحدة</b></div>
+    </div>
+  </div>`;
+    }
+    function renderSticker(r) {
+      return `<div class="print-sticker">
+    <div style="position:absolute;top:3px;left:4px;font-size:8px;font-weight:700;color:#0b3d91">#${r.id}</div>
+    <div style="position:absolute;top:3px;right:4px;font-size:8px;color:#7a4a1f;font-weight:700">${r.date || todayDate()}</div>
+    <div style="font-weight:900;font-size:15px;line-height:1.05;color:#0b3d91;text-align:center;width:100%;padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:6px">${r.customerName.toUpperCase()}</div>
+    <div style="font-size:10px;font-weight:700;line-height:1.15;color:#555;text-align:center;width:100%;padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${r.phoneProblem.substring(0, 40)}</div>
+    <div style="font-weight:800;font-size:13px;letter-spacing:.7px;line-height:1;color:#7a4a1f;text-align:center;width:100%;margin-top:5px">${r.mobileNumber}</div>
+    <div style="font-size:8px;color:#777;text-align:center;margin-top:2px">Job: #${r.id}</div>
+  </div>`;
+    }
+
+    // ==================== PRINT ====================
+    function doPrint(mode) {
+      if (!validate()) return; const r = buildRec();
+
+      const stockItems = get(K.S, []);
+      const outOfStock = [];
+      for (const sel of selected) {
+        const stockItem = stockItems.find(s => s.id === sel.id);
+        if (!stockItem || stockItem.quantity <= 0) {
+          outOfStock.push(sel.name + (sel.nameAr ? ' / ' + sel.nameAr : ''));
+        }
+      }
+      if (outOfStock.length > 0) {
+        showOOSAlert(outOfStock);
+        return;
+      }
+
+      const pa = document.getElementById('printArea');
+      pa.innerHTML = mode === 'invoice' ? renderInvoice(r) : renderSticker(r);
+
+      const silent = document.getElementById('silentPrint').checked;
+
+      setTimeout(() => {
+        try {
+          if (mode === 'invoice') JsBarcode('#bcInv', r.id, { height: 30, width: 1.5, fontSize: 9, margin: 0 });
+          else { /* sticker barcode removed */ }
+        } catch (e) { }
+
+        if (silent) {
+          try {
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'absolute'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
+            document.body.appendChild(iframe);
+            const doc = iframe.contentWindow.document;
+            doc.open(); doc.write(pa.innerHTML); doc.close();
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(() => { document.body.removeChild(iframe); pa.innerHTML = ''; }, 1000);
+          } catch (e) {
+            window.print();
+          }
+        } else {
+          window.print();
+        }
+
+        setTimeout(() => { pa.innerHTML = ''; if (selected.length) { decStock(selected.map(s => s.id)); selected = []; renderChips() } }, 500);
+      }, 80);
+    }
+
+    function showOOSAlert(items) {
+      const alert = document.getElementById('oosAlert');
+      alert.innerHTML = `<div style="font-size:14px">⚠️ Item Out of Stock / العنصر غير متوفر</div><div style="font-size:11px;opacity:.9;margin-top:4px">${items.join(', ')}</div>`;
+      alert.classList.add('active');
+      setTimeout(() => alert.classList.remove('active'), 5000);
+    }
+
+    function decStock(ids) {
+      const list = get(K.S, []).map(i => {
+        if (!ids.includes(i.id)) return i;
+        const q = Math.max(0, (i.quantity || 0) - 1);
+        return { ...i, quantity: q, inStock: q > 0 };
+      });
+      set(K.S, list);
+      const oos = list.filter(i => ids.includes(i.id) && i.quantity === 0);
+      if (oos.length > 0) {
+        showOOSAlert(oos.map(i => i.name + (i.nameAr ? ' / ' + i.nameAr : '')));
+      }
+      updateOOSBadge();
+    }
+
+    // ==================== COUNTERS ====================
+    function updateCounters() {
+      const all = get(K.R, []);
+      const today = new Date().toISOString().slice(0, 10);
+      const pending = all.filter(r => r.status !== 'delivered').length;
+      const deliveredToday = all.filter(r => r.status === 'delivered' && r.deliveredAt && new Date(r.deliveredAt).toISOString().slice(0, 10) === today).length;
+      const todayCollection = all.filter(r => r.status === 'delivered' && r.deliveredAt && new Date(r.deliveredAt).toISOString().slice(0, 10) === today).reduce((s, r) => s + (r.price || 0), 0);
+
+      document.getElementById('pendingCount').textContent = pending;
+      document.getElementById('deliveredCount').textContent = deliveredToday;
+      document.getElementById('collectionCount').textContent = todayCollection + ' SAR';
+      document.getElementById('totalCount').textContent = all.length;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // ==================== HISTORY ====================
+    const histq = document.getElementById('histq');
+    histq.addEventListener('input', renderHist);
+    function renderHist() {
+      const q = (histq.value || '').toLowerCase();
+      const rows = get(K.R, []).filter(r => !q || [r.id, r.customerName, r.mobileNumber, r.phoneModel, r.phoneProblem].some(x => (x || '').toLowerCase().includes(q)));
+      document.getElementById('histBody').innerHTML = rows.map(r => {
+        const isDelivered = r.status === 'delivered';
+        const isRepeat = checkRepeat(r);
+        return `<tr class="border-t ${isDelivered ? 'bg-green-50' : ''} ${isRepeat ? 'bg-amber-50' : ''}">
+      <td class="p-2 font-mono font-bold">#${r.id}</td>
+      <td class="p-2 font-medium">${r.customerName}${isRepeat ? '<span class="repeat-badge">REPEAT</span>' : ''}</td>
+      <td class="p-2">${r.mobileNumber}</td>
+      <td class="p-2">${r.phoneModel}</td>
+      <td class="p-2 max-w-xs truncate" title="${r.phoneProblem}">${r.phoneProblem}</td>
+      <td class="p-2 font-semibold text-blue-700">${r.price || 0} SAR</td>
+      <td class="p-2">${isDelivered ? '<span class="delivered-badge">DELIVERED</span>' : '<span class="status-pending">PENDING</span>'}</td>
+      <td class="p-2 text-xs">${r.date}</td>
+      <td class="p-2">
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button onclick='reprint(${JSON.stringify(r)})' class="text-blue-700 text-xs bg-blue-50 px-2 py-1 rounded" title="Print Invoice">🖨️ Print</button>
+          <button onclick='reprintSticker(${JSON.stringify(r)})' class="text-purple-700 text-xs bg-purple-50 px-2 py-1 rounded" title="Print Sticker">🏷️ Sticker</button>
+          <button onclick='sendWAHistory(${JSON.stringify(r)})' class="text-green-700 text-xs bg-green-50 px-2 py-1 rounded" title="WhatsApp">📱 WA</button>
+          ${!isDelivered ? `<button onclick='markDelivered("${r.id}")' class="text-green-700 text-xs bg-green-50 px-2 py-1 rounded" title="Mark Delivered">✅ Deliver</button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+      }).join('') || '<tr><td colspan="9" class="p-6 text-center text-gray-400">No records / لا يوجد سجلات</td></tr>';
+    }
+
+    function checkRepeat(r) {
+      const all = get(K.R, []);
+      const sameCustomer = all.filter(x => x.mobileNumber === r.mobileNumber && x.id !== r.id);
+      return sameCustomer.length > 0;
+    }
+
+    function markDelivered(id) {
+      const list = get(K.R, []).map(r => r.id === id ? { ...r, status: 'delivered', deliveredAt: Date.now() } : r);
+      set(K.R, list);
+      renderHist();
+      updateCounters();
+      showToast('✅ Marked as Delivered / تم التسليم');
+    }
+
+    function reprint(r) { current = r; const pa = document.getElementById('printArea'); pa.innerHTML = renderInvoice(r); setTimeout(() => { try { JsBarcode('#bcInv', r.id, { height: 30, width: 1.5, fontSize: 9, margin: 0 }) } catch (e) { } window.print(); setTimeout(() => { pa.innerHTML = ''; current = null }, 300) }, 80) }
+
+    function reprintSticker(r) { current = r; const pa = document.getElementById('printArea'); pa.innerHTML = renderSticker(r); setTimeout(() => { try { JsBarcode('#bcSt', r.mobileNumber.replace(/\D/g, '') || r.id, { height: 20, width: 1.2, displayValue: false, margin: 0 }) } catch (e) { } window.print(); setTimeout(() => { pa.innerHTML = ''; current = null }, 300) }, 80) }
+
+    function sendWAHistory(r) {
+      const msg = '*RESTART · Repair Slip*\nInvoice: #' + r.id + '\nName: ' + r.customerName + '\nMobile: ' + r.mobileNumber + '\nModel: ' + r.phoneModel + '\nProblem: ' + r.phoneProblem + '\nPrice: ' + r.price + ' SAR\nDate: ' + r.date;
+      window.open('https://wa.me/' + r.mobileNumber.replace(/\D/g, '') + '?text=' + encodeURIComponent(msg), '_blank');
+    }
+
+    function exportHistory() {
+      const data = get(K.R, []);
+      const csv = ['Invoice,Name,Mobile,Model,Problem,Price,Status,Date'].join(',') + '\n' +
+        data.map(r => [r.id, r.customerName, r.mobileNumber, r.phoneModel, '"' + r.phoneProblem.replace(/"/g, '""') + '"', r.price, r.status, r.date].join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'repair_history_' + todayDate() + '.csv'; a.click();
+      URL.revokeObjectURL(url);
+      showToast('📥 History Exported');
+    }
+
+    // ==================== SCANNER ====================
+    function openScanner() {
+      document.getElementById('scannerOverlay').classList.add('active');
+      setTimeout(() => {
+        if (document.getElementById('scannerOverlay').classList.contains('active')) {
+          closeScanner();
+        }
+      }, 3000);
+    }
+    function closeScanner() { document.getElementById('scannerOverlay').classList.remove('active'); }
+
+    function processScan(val) {
+      if (!val.trim()) return;
+      const all = get(K.R, []);
+      const invoice = all.find(r => r.id === val.trim());
+      const byPhone = all.filter(r => r.mobileNumber.replace(/\D/g, '') === val.trim().replace(/\D/g, ''));
+
+      const resultDiv = document.getElementById('scanResult');
+      const contentDiv = document.getElementById('scanResultContent');
+      resultDiv.classList.remove('hidden');
+
+      if (invoice) {
+        if (invoice.status !== 'delivered') {
+          markDelivered(invoice.id);
+        }
+        const isRepeat = checkRepeat(invoice);
+        contentDiv.innerHTML = `<div class="bg-green-50 border border-green-200 rounded-lg p-4">
+      <div class="text-green-800 font-bold text-lg mb-2">✅ Invoice Found / تم العثور على الفاتورة</div>
+      <div class="grid sm:grid-cols-2 gap-2 text-sm">
+        <div><b>Invoice #:</b> ${invoice.id}</div>
+        <div><b>Status:</b> <span class="text-green-700 font-bold">DELIVERED / تم التسليم</span></div>
+        <div><b>Name / الاسم:</b> ${invoice.customerName}</div>
+        <div><b>Mobile / جوال:</b> ${invoice.mobileNumber}</div>
+        <div><b>Model / الموديل:</b> ${invoice.phoneModel}</div>
+        <div><b>Price / السعر:</b> ${invoice.price || 0} SAR</div>
+        <div class="sm:col-span-2"><b>Problem / العطل:</b> ${invoice.phoneProblem}</div>
+      </div>
+      ${isRepeat ? `<div class="mt-3 bg-amber-100 border border-amber-300 rounded p-2 text-amber-800 text-sm font-bold">🔄 REPEAT CUSTOMER / عميل متكرر</div>` : ''}
+      <div class="mt-3 flex gap-2">
+        <button onclick='reprint(${JSON.stringify(invoice)})' class="px-4 py-2 bg-blue-600 text-white rounded text-sm">🖨️ Reprint</button>
+        <button onclick="document.getElementById('scanInput').value='';document.getElementById('scanResult').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Clear / مسح</button>
+      </div>
+    </div>`;
+      } else if (byPhone.length > 0) {
+        contentDiv.innerHTML = `<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="text-blue-800 font-bold text-lg mb-2">📱 Phone History / سجل الهاتف</div>
+      <div class="text-sm mb-3">Found ${byPhone.length} repair(s) for this number / تم العثور على ${byPhone.length} إصلاح</div>
+      <div class="space-y-2">${byPhone.map(r => `<div class="bg-white rounded p-3 border">
+        <div class="flex justify-between"><b>#${r.id}</b><span class="${r.status === 'delivered' ? 'text-green-600' : 'text-amber-600'}">${r.status === 'delivered' ? '✅ Delivered / تم التسليم' : '⏳ Pending / قيد الانتظار'}</span></div>
+        <div class="text-xs text-gray-500">${r.date} · ${r.phoneModel} · ${r.price || 0} SAR</div>
+        <div class="text-xs">${r.phoneProblem}</div>
+      </div>`).join('')}</div>
+    </div>`;
+      } else {
+        contentDiv.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+      <div class="text-red-800 font-bold text-lg mb-2">❌ Not Found / غير موجود</div>
+      <div class="text-red-600 text-sm">No invoice or phone record found for: ${val}</div>
+    </div>`;
+      }
+      document.getElementById('scanInput').value = '';
+    }
+
+    function showDelivered() {
+      const delivered = get(K.R, []).filter(r => r.status === 'delivered');
+      document.getElementById('scanResult').classList.remove('hidden');
+      document.getElementById('scanResultContent').innerHTML = `<div class="bg-green-50 border border-green-200 rounded-lg p-4">
+    <div class="text-green-800 font-bold text-lg mb-2">✅ Delivered Items / العناصر المسلمة (${delivered.length})</div>
+    <div class="space-y-2">${delivered.map(r => `<div class="bg-white rounded p-3 border">
+      <div class="flex justify-between"><b>#${r.id}</b><span class="text-green-600 text-xs">${new Date(r.deliveredAt).toLocaleDateString()}</span></div>
+      <div class="text-xs">${r.customerName} · ${r.phoneModel} · ${r.price || 0} SAR</div>
+    </div>`).join('')}</div>
+  </div>`;
+    }
+
+    function showRepeat() {
+      const all = get(K.R, []);
+      const repeatCustomers = {};
+      all.forEach(r => {
+        if (!repeatCustomers[r.mobileNumber]) repeatCustomers[r.mobileNumber] = [];
+        repeatCustomers[r.mobileNumber].push(r);
+      });
+      const repeats = Object.entries(repeatCustomers).filter(([k, v]) => v.length > 1);
+      document.getElementById('scanResult').classList.remove('hidden');
+      document.getElementById('scanResultContent').innerHTML = `<div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-amber-800 font-bold text-lg mb-2">🔄 Repeat Repairs / إصلاحات متكررة (${repeats.length} customers)</div>
+    <div class="space-y-2">${repeats.map(([phone, records]) => `<div class="bg-white rounded p-3 border">
+      <div class="font-bold text-sm">${records[0].customerName} · ${phone}</div>
+      <div class="text-xs text-gray-500">${records.length} repairs total / إجمالي الإصلاحات</div>
+      <div class="mt-1 space-y-1">${records.map(r => `<div class="text-xs ${r.status === 'delivered' ? 'text-green-600' : 'text-amber-600'}">#${r.id} · ${r.phoneModel} · ${r.date} · ${r.status === 'delivered' ? '✅' : '⏳'}</div>`).join('')}</div>
+    </div>`).join('')}</div>
+  </div>`;
+    }
+
+    // ==================== STOCK ====================
+    function tryUnlock() { if (pwInput.value === PASSWORD) { unlocked = true; stockLock.classList.add('hidden'); stockMain.classList.remove('hidden'); renderStock() } else { pwErr.classList.remove('hidden') } }
+    document.getElementById('pwInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock() });
+    ['stq', 'stfilter'].forEach(id => document.getElementById(id).addEventListener('input', renderStock));
+
+    function renderStock() {
+      if (!unlocked) return;
+      const q = (stq.value || '').toLowerCase(); const f = stfilter.value;
+      const rows = get(K.S, []).filter(s => (!q || s.name.toLowerCase().includes(q) || (s.nameAr || '').toLowerCase().includes(q)) && (f === 'all' || (f === 'in' ? s.inStock !== false : s.inStock === false)));
+      document.getElementById('stockBody').innerHTML = rows.map(s => `<tr class="border-t">
+    <td class="p-2"><label class="cursor-pointer">${s.image ? `<img src="${s.image}" class="w-12 h-12 object-cover rounded">` : `<div class="w-12 h-12 grid place-items-center bg-gray-100 rounded text-2xl">${ICONS[s.category] || '🧩'}</div>`}<input type="file" accept="image/*" class="hidden" onchange="upImg('${s.id}',this)"></label></td>
+    <td class="p-2"><input class="inp text-sm" value="${s.name.replace(/"/g, '&quot;')}" onchange="upd('${s.id}','name',this.value)"></td>
+    <td class="p-2" style="direction:rtl"><input class="inp text-sm" value="${(s.nameAr || '').replace(/"/g, '&quot;')}" onchange="upd('${s.id}','nameAr',this.value)" placeholder="الاسم بالعربي"></td>
+    <td class="p-2 text-xs">${s.category || '-'}</td>
+    <td class="p-2"><input type="number" class="inp text-sm w-20" value="${s.price || 0}" onchange="upd('${s.id}','price',+this.value)"></td>
+    <td class="p-2"><input type="number" class="inp text-sm w-16" value="${s.quantity ?? 0}" onchange="updQty('${s.id}',+this.value)"></td>
+    <td class="p-2"><button onclick="toggleSt('${s.id}')" class="text-xs px-2 py-1 rounded ${s.inStock !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${s.inStock !== false ? 'In Stock / متوفر' : 'Out of Stock / غير متوفر'}</button></td>
+    <td class="p-2"><button onclick="delItem('${s.id}')" class="text-red-600 text-xs">Delete / حذف</button></td>
+  </tr>`).join('') || '<tr><td colspan="8" class="p-6 text-center text-gray-400">No items / لا يوجد عناصر</td></tr>';
+    }
+    function upd(id, k, v) { const l = get(K.S, []).map(i => i.id === id ? { ...i, [k]: v } : i); set(K.S, l); renderStock() }
+    function updQty(id, v) { const l = get(K.S, []).map(i => i.id === id ? { ...i, quantity: v, inStock: v > 0 } : i); set(K.S, l); renderStock() }
+    function toggleSt(id) { const l = get(K.S, []).map(i => i.id === id ? { ...i, inStock: !(i.inStock !== false) } : i); set(K.S, l); renderStock() }
+    function delItem(id) { if (!confirm('Delete? / حذف؟')) return; set(K.S, get(K.S, []).filter(i => i.id !== id)); renderStock() }
+    function upImg(id, inp) { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { upd(id, 'image', e.target.result) }; r.readAsDataURL(f) }
+    function addItem() { const n = ni_name.value.trim(); if (!n) return; const p = +ni_price.value || 0; const ar = ni_name_ar.value.trim(); const it = { id: 'u-' + Date.now(), name: n, nameAr: ar, price: p, quantity: 1, inStock: true, category: 'Other' }; const l = get(K.S, []); l.unshift(it); set(K.S, l); ni_name.value = ''; ni_name_ar.value = ''; ni_price.value = ''; renderStock() }
+
+    function exportStock() {
+      const data = get(K.S, []);
+      const csv = ['ID,Name,Arabic,Category,Price,Quantity,Status'].join(',') + '\n' +
+        data.map(s => [s.id, s.name, s.nameAr || '', s.category || '', s.price || 0, s.quantity || 0, s.inStock !== false ? 'In Stock' : 'Out of Stock'].join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'stock_' + todayDate() + '.csv'; a.click();
+      URL.revokeObjectURL(url);
+      showToast('📥 Stock Exported');
+    }
+
+    // ==================== DAILY REPORT ====================
+    function showDailyReport() {
+      const today = new Date().toISOString().slice(0, 10);
+      const all = get(K.R, []);
+      const todayRepairs = all.filter(r => r.date === today);
+      const delivered = todayRepairs.filter(r => r.status === 'delivered');
+      const pending = todayRepairs.filter(r => r.status !== 'delivered');
+      const revenue = delivered.reduce((s, r) => s + (r.price || 0), 0);
+      const repeatCustomers = {};
+      todayRepairs.forEach(r => {
+        if (!repeatCustomers[r.mobileNumber]) repeatCustomers[r.mobileNumber] = [];
+        repeatCustomers[r.mobileNumber].push(r);
+      });
+      const repeats = Object.entries(repeatCustomers).filter(([k, v]) => v.length > 1).length;
+
+      const content = `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
+      <div style="background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:11px;opacity:.9">Total Repairs</div>
+        <div style="font-size:24px;font-weight:800">${todayRepairs.length}</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:11px;opacity:.9">Revenue</div>
+        <div style="font-size:24px;font-weight:800">${revenue} SAR</div>
+      </div>
+      <div style="background:#fef3c7;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:11px;color:#92400e">Pending</div>
+        <div style="font-size:24px;font-weight:800;color:#92400e">${pending.length}</div>
+      </div>
+      <div style="background:#d1fae5;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:11px;color:#065f46">Delivered</div>
+        <div style="font-size:24px;font-weight:800;color:#065f46">${delivered.length}</div>
+      </div>
+    </div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--brand1)">Today's Repairs:</div>
+    <div style="max-height:300px;overflow-y:auto">
+      ${todayRepairs.length ? todayRepairs.map(r => `
+        <div style="border-bottom:1px solid #eee;padding:8px 0;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:600">#${r.id} · ${r.customerName}</div>
+            <div style="font-size:12px;color:#666">${r.phoneModel} · ${r.price} SAR</div>
+          </div>
+          <span class="${r.status === 'delivered' ? 'delivered-badge' : 'status-pending'}" style="font-size:11px">${r.status === 'delivered' ? 'DELIVERED' : 'PENDING'}</span>
+        </div>
+      `).join('') : '<div style="text-align:center;color:#999;padding:20px">No repairs today</div>'}
+    </div>
+  `;
+
+      document.getElementById('reportPopupContent').innerHTML = content;
+      document.getElementById('reportPopup').classList.add('active');
+    }
+
+    function closeReportPopup(e) {
+      if (e && e.target.id !== 'reportPopup') return;
+      document.getElementById('reportPopup').classList.remove('active');
+    }
+
+    // ==================== CUSTOMER POPUP ====================
+    function showCustomerPopup(r) {
+      const content = `
+    <div style="display:grid;gap:10px">
+      <div style="display:flex;gap:10px;align-items:center;padding:10px;background:#f8fafc;border-radius:8px">
+        <div style="width:50px;height:50px;background:linear-gradient(135deg,var(--brand1),var(--brand2));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px">👤</div>
+        <div>
+          <div style="font-weight:700;font-size:16px">${r.customerName}</div>
+          <div style="font-size:13px;color:#666">${r.mobileNumber}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#f8fafc;padding:10px;border-radius:8px">
+          <div style="font-size:11px;color:#666">Invoice #</div>
+          <div style="font-weight:700;font-size:14px">#${r.id}</div>
+        </div>
+        <div style="background:#f8fafc;padding:10px;border-radius:8px">
+          <div style="font-size:11px;color:#666">Date</div>
+          <div style="font-weight:700;font-size:14px">${r.date}</div>
+        </div>
+        <div style="background:#f8fafc;padding:10px;border-radius:8px">
+          <div style="font-size:11px;color:#666">Model</div>
+          <div style="font-weight:700;font-size:14px">${r.phoneModel}</div>
+        </div>
+        <div style="background:#f8fafc;padding:10px;border-radius:8px">
+          <div style="font-size:11px;color:#666">Price</div>
+          <div style="font-weight:700;font-size:14px;color:var(--brand1)">${r.price || 0} SAR</div>
+        </div>
+      </div>
+      <div style="background:#f8fafc;padding:10px;border-radius:8px">
+        <div style="font-size:11px;color:#666;margin-bottom:4px">Problem</div>
+        <div style="font-size:14px">${r.phoneProblem}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick='reprint(${JSON.stringify(r)})' class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold">🖨️ Print</button>
+        <button onclick='sendWAHistory(${JSON.stringify(r)})' class="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold">📱 WhatsApp</button>
+        ${r.status !== 'delivered' ? `<button onclick='markDelivered("${r.id}");closeCustomerPopup();' class="flex-1 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold">✅ Deliver</button>` : ''}
+      </div>
+    </div>
+  `;
+      document.getElementById('customerPopupContent').innerHTML = content;
+      document.getElementById('customerPopup').classList.add('active');
+    }
+
+    function closeCustomerPopup(e) {
+      if (e && e.target.id !== 'customerPopup') return;
+      document.getElementById('customerPopup').classList.remove('active');
+    }
+
+    // ==================== OUT OF STOCK NOTIFICATION ====================
+    function updateOOSBadge() {
+      const stock = get(K.S, []);
+      const oosItems = stock.filter(s => s.inStock === false || s.quantity === 0);
+      const badge = document.getElementById('oosBadge');
+      if (badge) {
+        if (oosItems.length > 0) {
+          badge.textContent = oosItems.length;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+    }
+
+    function showOOSNotification() {
+      const stock = get(K.S, []);
+      const oosItems = stock.filter(s => s.inStock === false || s.quantity === 0);
+
+      const content = document.getElementById('oosPopupContent');
+      if (!content) return;
+
+      if (oosItems.length === 0) {
+        content.innerHTML = `<div class="text-center p-4 text-green-600 font-bold">✅ All items are in stock! / جميع العناصر متوفرة!</div>`;
+      } else {
+        let tableHtml = `<table style="width:100%;font-size:13px;border-collapse:collapse">
+      <thead style="background:#f3f4f6"><tr>
+        <th style="padding:8px;text-align:left;border-bottom:1px solid #ddd">Item / العنصر</th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #ddd">Qty / الكمية</th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #ddd">Status / الحالة</th>
+      </tr></thead><tbody>`;
+
+        oosItems.forEach(item => {
+          tableHtml += `<tr style="border-bottom:1px solid #eee">
+        <td style="padding:8px"><b>${item.name}</b>${item.nameAr ? `<br><span style="direction:rtl;color:#666;font-size:12px">${item.nameAr}</span>` : ''}</td>
+        <td style="padding:8px;text-align:center;color:#dc2626;font-weight:bold">${item.quantity || 0}</td>
+        <td style="padding:8px;text-align:center"><span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">Out of Stock / غير متوفر</span></td>
+      </tr>`;
+        });
+        tableHtml += '</tbody></table>';
+
+        content.innerHTML = `<div style="max-height:300px;overflow-y:auto;margin-bottom:10px">${tableHtml}</div>
+      <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px;margin-top:10px">
+        <div style="font-weight:700;color:#92400e;font-size:13px">📋 Summary / ملخص</div>
+        <div style="font-size:13px;color:#92400e;margin-top:4px">Total Out of Stock: ${oosItems.length} items / إجمالي النفاد: ${oosItems.length} عنصر</div>
+      </div>`;
+      }
+
+      document.getElementById('oosPopup').classList.add('active');
+    }
+
+    function closeOOSPopup(e) {
+      if (e && e.target.id !== 'oosPopup') return;
+      document.getElementById('oosPopup').classList.remove('active');
+    }
+
+    function sendOOSWhatsApp() {
+      const stock = get(K.S, []);
+      const oosItems = stock.filter(s => s.inStock === false || s.quantity === 0);
+
+      if (oosItems.length === 0) {
+        showToast('No out of stock items! / لا يوجد عناصر نفاد!');
+        return;
+      }
+
+      let waNumber = document.getElementById('oosWaNumber').value.trim().replace(/\D/g, '');
+      if (!waNumber) {
+        alert(currentLang === 'ar' ? 'يرجى إدخال رقم الواتساب' : 'Please enter WhatsApp number');
+        return;
+      }
+
+      if (waNumber.startsWith('0')) {
+        waNumber = '966' + waNumber.substring(1);
+      } else if (!waNumber.startsWith('966')) {
+        waNumber = '966' + waNumber;
+      }
+
+      let msg = '*RESTART · Out of Stock Alert / تنبيه نفاد المخزون*\n\n';
+      msg += 'The following items are OUT OF STOCK / العناصر التالية غير متوفرة:\n\n';
+
+      oosItems.forEach((item, idx) => {
+        msg += `${idx + 1}. ${item.name}${item.nameAr ? ' / ' + item.nameAr : ''} (Qty: ${item.quantity || 0})\n`;
+      });
+
+      msg += `\nTotal: ${oosItems.length} items / إجمالي: ${oosItems.length} عنصر\n`;
+      msg += '\nPlease restock ASAP / يرجى إعادة التعبئة في أقرب وقت';
+
+      window.open('https://wa.me/' + waNumber + '?text=' + encodeURIComponent(msg), '_blank');
+      showToast('WhatsApp message prepared! / تم إعداد رسالة الواتساب!');
+      closeOOSPopup();
+    }
+
+    // ==================== STOCK OUT OF STOCK LIST ====================
+    function showStockOOSList() {
+      const stock = get(K.S, []);
+      const oosItems = stock.filter(s => s.inStock === false || s.quantity === 0);
+
+      const content = document.getElementById('stockOOSContent');
+      if (!content) return;
+
+      if (oosItems.length === 0) {
+        content.innerHTML = `<div class="text-center p-4 text-green-600 font-bold">✅ All items are in stock! / جميع العناصر متوفرة!</div>`;
+      } else {
+        let tableHtml = `<table style="width:100%;font-size:13px;border-collapse:collapse">
+      <thead style="background:#fee2e2"><tr>
+        <th style="padding:10px;text-align:left;border-bottom:2px solid #dc2626">Item / العنصر</th>
+        <th style="padding:10px;text-align:center;border-bottom:2px solid #dc2626">Category / الفئة</th>
+        <th style="padding:10px;text-align:center;border-bottom:2px solid #dc2626">Qty / الكمية</th>
+        <th style="padding:10px;text-align:center;border-bottom:2px solid #dc2626">Price / السعر</th>
+      </tr></thead><tbody>`;
+
+        oosItems.forEach(item => {
+          tableHtml += `<tr style="border-bottom:1px solid #eee;background:#fff">
+        <td style="padding:10px"><b style="color:#dc2626">${item.name}</b>${item.nameAr ? `<br><span style="direction:rtl;color:#666;font-size:12px">${item.nameAr}</span>` : ''}</td>
+        <td style="padding:10px;text-align:center;font-size:12px">${item.category || '-'}</td>
+        <td style="padding:10px;text-align:center;color:#dc2626;font-weight:bold;font-size:14px">${item.quantity || 0}</td>
+        <td style="padding:10px;text-align:center;font-weight:bold">${item.price || 0} SAR</td>
+      </tr>`;
+        });
+        tableHtml += '</tbody></table>';
+
+        content.innerHTML = `<div style="max-height:350px;overflow-y:auto;margin-bottom:10px">${tableHtml}</div>
+      <div style="background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;padding:12px;margin-top:12px">
+        <div style="font-weight:700;color:#92400e;font-size:14px">📋 Order Summary / ملخص الطلب</div>
+        <div style="font-size:13px;color:#92400e;margin-top:4px">Total Items to Order: ${oosItems.length} / إجمالي العناصر المطلوبة: ${oosItems.length}</div>
+        <div style="font-size:13px;color:#92400e;margin-top:2px">Total Value: ${oosItems.reduce((s, i) => s + (i.price || 0), 0)} SAR / القيمة الإجمالية: ${oosItems.reduce((s, i) => s + (i.price || 0), 0)} ريال</div>
+      </div>`;
+      }
+
+      document.getElementById('stockOOSPopup').classList.add('active');
+    }
+
+    function closeStockOOSPopup(e) {
+      if (e && e.target.id !== 'stockOOSPopup') return;
+      document.getElementById('stockOOSPopup').classList.remove('active');
+    }
+
+    function sendStockOOSWhatsApp() {
+      const stock = get(K.S, []);
+      const oosItems = stock.filter(s => s.inStock === false || s.quantity === 0);
+
+      if (oosItems.length === 0) {
+        showToast('No out of stock items! / لا يوجد عناصر نفاد!');
+        return;
+      }
+
+      let waNumber = document.getElementById('stockOOSWaNumber').value.trim().replace(/\D/g, '');
+      if (!waNumber) {
+        alert(currentLang === 'ar' ? 'يرجى إدخال رقم واتساب الشركة' : 'Please enter company WhatsApp number');
+        return;
+      }
+
+      if (waNumber.startsWith('0')) {
+        waNumber = '966' + waNumber.substring(1);
+      } else if (!waNumber.startsWith('966')) {
+        waNumber = '966' + waNumber;
+      }
+
+      let msg = '*RESTART · Order Request / طلب شراء*\n\n';
+      msg += 'Please supply the following items / يرجى توفير العناصر التالية:\n\n';
+
+      oosItems.forEach((item, idx) => {
+        msg += `${idx + 1}. ${item.name}${item.nameAr ? ' / ' + item.nameAr : ''}\n`;
+        msg += `   Category: ${item.category || 'Other'} | Price: ${item.price || 0} SAR | Qty Needed: ${Math.max(1, 5 - (item.quantity || 0))}\n\n`;
+      });
+
+      msg += `\nTotal Items: ${oosItems.length} / إجمالي العناصر: ${oosItems.length}\n`;
+      msg += `Total Value: ${oosItems.reduce((s, i) => s + (i.price || 0), 0)} SAR / القيمة الإجمالية: ${oosItems.reduce((s, i) => s + (i.price || 0), 0)} ريال\n`;
+      msg += '\nPlease confirm availability / يرجى تأكيد التوفر';
+
+      window.open('https://wa.me/' + waNumber + '?text=' + encodeURIComponent(msg), '_blank');
+      showToast('Order sent to company! / تم إرسال الطلب للشركة!');
+      closeStockOOSPopup();
+    }
+
+    // ==================== AUTO BACKUP ====================
+    function autoBackup() {
+      const data = {
+        repairs: get(K.R, []),
+        stock: get(K.S, []),
+        counter: localStorage.getItem(K.C) || '17',
+        timestamp: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'restart_backup_' + todayDate() + '.json'; a.click();
+      URL.revokeObjectURL(url);
+      showToast('💾 Backup Downloaded!');
+    }
+
+    // ==================== INIT ====================
+    seedStock();
+    updateCounters();
+    updateOOSBadge();
+    showTab('home');
+
+    // Load saved language
+    if (currentLang === 'ar') toggleLang('ar');
+
+    // Load dark mode
+    if (get(K.DARK, false)) {
+      document.body.classList.add('dark');
+    }
+
+    // Auto backup every 30 minutes
+    setInterval(() => {
+      const data = { repairs: get(K.R, []), stock: get(K.S, []), timestamp: new Date().toISOString() };
+      localStorage.setItem(K.BACKUP, JSON.stringify(data));
+    }, 30 * 60 * 1000);
+
+  </script>
+</body>
+
+</html>
