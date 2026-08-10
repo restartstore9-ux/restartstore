@@ -7,6 +7,9 @@
   <title>RESTART · Mobile Repair</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore-compat.js"></script>
   <style>
     :root {
       --brand1: #0b3d91;
@@ -553,8 +556,25 @@
           style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">✕</button>
       </div>
       <div id="reportPopupContent"></div>
+    </div>
+  </div>
 
-      <!-- Out of Stock Notification Popup -->
+  <!-- Delivery / Not Repair Action Popup -->
+  <div id="reportActionPopup" class="popup-overlay" onclick="closeReportAction(event)">
+    <div class="popup-box" onclick="event.stopPropagation()" style="max-width:460px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+        <h2 id="reportActionTitle" style="font-size:18px;font-weight:700;color:var(--brand1)">🚚 Delivery Report</h2>
+        <button type="button" onclick="closeReportAction()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">✕</button>
+      </div>
+      <p id="reportActionHint" style="font-size:13px;color:#666;margin-bottom:10px">Enter Job ID and press Enter to save delivery report.</p>
+      <input id="reportActionJobId" class="inp" inputmode="numeric" autocomplete="off" placeholder="Enter Job ID / أدخل رقم الوظيفة"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();saveReportAction()}" />
+      <button type="button" onclick="saveReportAction()" class="w-full mt-3 rounded-lg brand-bg text-white font-semibold py-3">↵ Enter / Save Report</button>
+      <div id="reportActionMessage" style="margin-top:10px;font-size:13px"></div>
+    </div>
+  </div>
+
+  <!-- Out of Stock Notification Popup -->
       <div id="oosPopup" class="popup-overlay" onclick="closeOOSPopup(event)">
         <div class="popup-box" onclick="event.stopPropagation()" style="max-width:480px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
@@ -606,8 +626,9 @@
     </div>
   </div>
 
-  <header class="brand-bg text-white shadow">
+  <header class="brand-bg text-white shadow" style="position:relative">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+      <div id="cloudStatus" style="position:absolute;right:10px;bottom:-24px;font-size:11px;color:#64748b;background:#fff;border-radius:8px;padding:3px 8px;box-shadow:0 1px 4px rgba(0,0,0,.08);z-index:30">☁️ Starting cloud sync…</div>
       <div style="display:flex;align-items:center;gap:10px">
         <img
           src="data:image/png;base64,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"
@@ -714,7 +735,7 @@
           <button onclick="resetForm()" class="text-blue-700 hover:underline">+ New / جديد</button>
         </div>
       </div>
-      <div class="grid sm:grid-cols-3 gap-3 mt-5">
+      <div class="grid sm:grid-cols-2 md:grid-cols-5 gap-3 mt-5">
         <button onclick="sendWA()" class="rounded-lg bg-green-600 text-white font-semibold py-3 hover:opacity-90">📱
           WhatsApp Slip</button>
         <button onclick="doPrint('sticker')"
@@ -722,6 +743,10 @@
           Print Sticker</button>
         <button onclick="doPrint('invoice')"
           class="rounded-lg brand-bg text-white font-semibold py-3 hover:opacity-90">🧾 Print Invoice</button>
+        <button onclick="openReportAction('delivery')"
+          class="rounded-lg bg-green-600 text-white font-semibold py-3 hover:opacity-90">🚚 Delivery</button>
+        <button onclick="openReportAction('notrepair')"
+          class="rounded-lg bg-red-600 text-white font-semibold py-3 hover:opacity-90">🚫 Not Repair</button>
       </div>
       <div class="mt-3 flex items-center gap-2 justify-center flex-wrap">
         <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border shadow-sm">
@@ -925,10 +950,96 @@
   <script>
 
     // ==================== CONSTANTS & CONFIG ====================
-    const K = { R: 'restart_repairs_v4', S: 'restart_stock_v4', C: 'restart_counter_v4', SEED: 'restart_stock_seeded_v4', LANG: 'restart_lang_v4', DARK: 'restart_dark_v4', BACKUP: 'restart_backup_v4' };
+    const K = { R: 'restart_repairs_v4', S: 'restart_stock_v4', C: 'restart_counter_v4', SEED: 'restart_stock_seeded_v4', LANG: 'restart_lang_v4', DARK: 'restart_dark_v4', BACKUP: 'restart_backup_v4', DELIVERY: 'restart_delivery_reports_v1', NOTREPAIR: 'restart_notrepair_reports_v1', ACTIVITY: 'restart_activity_v1' };
     const PASSWORD = '525670';
+
+    // ==================== FIREBASE ONLINE + OFFLINE SYNC ====================
+    const FIREBASE_CONFIG = {
+      apiKey: 'AIzaSyC9gHfqDaPNT709MeDnRzNYXLcM_ETeigk',
+      authDomain: 'restart-store-fc980.firebaseapp.com',
+      projectId: 'restart-store-fc980',
+      storageBucket: 'restart-store-fc980.firebasestorage.app',
+      messagingSenderId: '607387006747',
+      appId: '1:607387006747:web:0a5cc8460ee3eb68a1c5be',
+      measurementId: 'G-WFEBVCR3RK'
+    };
+    const CLOUD_STORE_ID = 'restart-store-main';
+    let cloudReady = false, applyingCloud = false, cloudTimer = null, cloudFirstSnapshot = true;
+    const cloudKeys = [K.R, K.S, K.C, K.DELIVERY, K.NOTREPAIR, K.ACTIVITY];
+
     const get = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } };
-    const set = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+    function set(k, v) {
+      localStorage.setItem(k, JSON.stringify(v));
+      if (cloudReady && !applyingCloud && cloudKeys.includes(k)) queueCloudSync();
+    }
+
+    function setCloudStatus(text) {
+      const el = document.getElementById('cloudStatus');
+      if (el) el.textContent = text;
+    }
+    function localCloudPayload() {
+      const data = {};
+      cloudKeys.forEach(k => data[k] = get(k, k === K.C ? '17' : []));
+      data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      return data;
+    }
+    function queueCloudSync() {
+      clearTimeout(cloudTimer);
+      cloudTimer = setTimeout(syncToCloud, 450);
+    }
+    async function syncToCloud() {
+      if (!cloudReady || applyingCloud) return;
+      try {
+        await firebase.firestore().collection('restartStores').doc(CLOUD_STORE_ID).set(localCloudPayload(), { merge: true });
+        setCloudStatus('☁️ Online & synced');
+      } catch (e) {
+        console.warn('Cloud sync:', e);
+        setCloudStatus('📴 Offline — saved locally, will sync');
+      }
+    }
+    function applyCloudData(data) {
+      applyingCloud = true;
+      try {
+        cloudKeys.forEach(k => {
+          if (Object.prototype.hasOwnProperty.call(data, k)) localStorage.setItem(k, JSON.stringify(data[k]));
+        });
+        if (typeof updateCounters === 'function') updateCounters();
+        if (typeof updateOOSBadge === 'function') updateOOSBadge();
+        if (typeof renderHist === 'function') renderHist();
+        if (typeof renderStock === 'function') renderStock();
+      } finally { applyingCloud = false; }
+    }
+    async function initCloudSync() {
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        // Anonymous sign-in keeps the Firestore database protected without asking shop staff for a login.
+        await auth.signInAnonymously();
+        // Enable persistent IndexedDB cache so the same app keeps working offline.
+        try { await db.enablePersistence({ synchronizeTabs: true }); } catch (e) { console.warn('Offline cache:', e); }
+        cloudReady = true;
+        setCloudStatus(navigator.onLine ? '☁️ Connecting…' : '📴 Offline — local data active');
+        db.collection('restartStores').doc(CLOUD_STORE_ID).onSnapshot(snap => {
+          if (snap.exists) {
+            applyCloudData(snap.data());
+            cloudFirstSnapshot = false;
+            setCloudStatus(navigator.onLine ? '☁️ Online & synced' : '📴 Offline — local data active');
+          } else {
+            cloudFirstSnapshot = false;
+            syncToCloud();
+          }
+        }, err => {
+          console.error('Cloud listener:', err);
+          setCloudStatus('📴 Offline — local data active');
+        });
+        window.addEventListener('online', () => { setCloudStatus('☁️ Back online — syncing…'); syncToCloud(); });
+        window.addEventListener('offline', () => setCloudStatus('📴 Offline — local data active'));
+      } catch (e) {
+        console.error('Firebase setup:', e);
+        setCloudStatus('⚠️ Firebase setup required');
+      }
+    }
 
     // Language System
     let currentLang = get(K.LANG, 'en');
@@ -1054,7 +1165,7 @@
     }
 
     // ==================== DATA & STATE ====================
-    function nextInv() { const c = parseInt(localStorage.getItem(K.C) || '17', 10) + 1; localStorage.setItem(K.C, c); return String(c).padStart(4, '0') }
+    function nextInv() { const c = parseInt(localStorage.getItem(K.C) || '17', 10) + 1; set(K.C, c); return String(c).padStart(4, '0') }
     const ICONS = { "Screen Smart": "📱", "Screen Incell": "📲", "Screen Original": "🖥️", "Battery": "🔋", "Camera": "📷", "Ringer": "🔔", "Face ID": "🪪", "Charging Port": "🔌", "Flex": "🧬", "Speaker": "🔊", "Back Panel": "🪞", "Camera Lens": "🔍" };
     const MODELS = ["iPhone 6", "iPhone 6 Plus", "iPhone 6s", "iPhone 6s Plus", "iPhone 7", "iPhone 7 Plus", "iPhone 8", "iPhone 8 Plus", "iPhone X", "iPhone XR", "iPhone XS", "iPhone XS Max", "iPhone 11", "iPhone 11 Pro", "iPhone 11 Pro Max", "iPhone 12 mini", "iPhone 12", "iPhone 12 Pro", "iPhone 12 Pro Max", "iPhone 13 mini", "iPhone 13", "iPhone 13 Pro", "iPhone 13 Pro Max", "iPhone 14", "iPhone 14 Plus", "iPhone 14 Pro", "iPhone 14 Pro Max", "iPhone 15", "iPhone 15 Plus", "iPhone 15 Pro", "iPhone 15 Pro Max", "iPhone 16", "iPhone 16 Plus", "iPhone 16 Pro", "iPhone 16 Pro Max", "iPhone 17", "iPhone 17 Plus", "iPhone 17 Pro", "iPhone 17 Pro Max"];
     const CATS = Object.keys(ICONS);
@@ -1170,6 +1281,7 @@
     // ==================== WHATSAPP ====================
     function sendWA() {
       if (!validate()) return; const r = buildRec();
+      logActivity(mode === 'invoice' ? 'print_invoice' : 'print_sticker', r.id);
       const msg = '*RESTART · Repair Slip / إيصال صيانة*\nInvoice: #' + r.id + '\nName / الاسم: ' + r.customerName + '\nMobile / جوال: ' + r.mobileNumber + '\nModel / الموديل: ' + r.phoneModel + '\nProblem / العطل: ' + r.phoneProblem + '\nPrice / السعر: ' + r.price + ' SAR\nDate / التاريخ: ' + r.date + ' ' + r.time + '\n\nThank you for choosing Restart. / شكراً لاختيارك ريستارت.';
 
       if (document.getElementById('pdfMode').checked) {
@@ -1261,6 +1373,7 @@
     // ==================== PRINT ====================
     function doPrint(mode) {
       if (!validate()) return; const r = buildRec();
+      logActivity(mode === 'invoice' ? 'print_invoice' : 'print_sticker', r.id, { customerName: r.customerName });
 
       const stockItems = get(K.S, []);
       const outOfStock = [];
@@ -1349,6 +1462,82 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
+    // ==================== DELIVERY / NOT REPAIR REPORTS ====================
+    let reportActionMode = 'delivery';
+
+    function logActivity(type, jobId, extra = {}) {
+      const list = get(K.ACTIVITY, []);
+      list.unshift({ type, jobId: jobId || '', at: Date.now(), ...extra });
+      set(K.ACTIVITY, list.slice(0, 5000));
+    }
+
+    function openReportAction(mode) {
+      reportActionMode = mode === 'notrepair' ? 'notrepair' : 'delivery';
+      const title = document.getElementById('reportActionTitle');
+      const hint = document.getElementById('reportActionHint');
+      const input = document.getElementById('reportActionJobId');
+      const msg = document.getElementById('reportActionMessage');
+      if (reportActionMode === 'delivery') {
+        title.textContent = '🚚 Delivery Report / تقرير التسليم';
+        hint.textContent = 'Enter Job ID and press Enter to save delivery report.';
+        input.placeholder = 'Enter Job ID / أدخل رقم الوظيفة';
+      } else {
+        title.textContent = '🚫 Not Repair Report / تقرير ليس إصلاح';
+        hint.textContent = 'Enter Job ID and press Enter to save Not Repair report.';
+        input.placeholder = 'Enter Job ID / أدخل رقم الوظيفة';
+      }
+      input.value = '';
+      msg.innerHTML = '';
+      document.getElementById('reportActionPopup').classList.add('active');
+      setTimeout(() => input.focus(), 80);
+    }
+
+    function closeReportAction(e) {
+      if (e && e.target.id !== 'reportActionPopup') return;
+      document.getElementById('reportActionPopup').classList.remove('active');
+    }
+
+    function saveReportAction() {
+      const input = document.getElementById('reportActionJobId');
+      const msg = document.getElementById('reportActionMessage');
+      const jobId = (input.value || '').trim();
+      if (!jobId) { msg.innerHTML = '<span style="color:#dc2626;font-weight:700">Please enter Job ID / رقم الوظيفة مطلوب</span>'; input.focus(); return; }
+
+      const repairs = get(K.R, []);
+      const repair = repairs.find(r => String(r.id) === jobId || String(r.id).replace(/^#/, '') === jobId.replace(/^#/, ''));
+      if (!repair) {
+        msg.innerHTML = '<span style="color:#dc2626;font-weight:700">Job ID not found / رقم الوظيفة غير موجود</span>';
+        input.focus();
+        return;
+      }
+
+      const now = Date.now();
+      if (reportActionMode === 'delivery') {
+        const reports = get(K.DELIVERY, []);
+        const existing = reports.find(x => String(x.jobId) === String(repair.id));
+        const report = existing ? { ...existing, deliveredAt: now, status: 'delivered' } : { id: 'D' + now, jobId: String(repair.id), invoiceId: String(repair.id), customerName: repair.customerName, mobileNumber: repair.mobileNumber, phoneModel: repair.phoneModel, price: repair.price || 0, deliveredAt: now, date: repair.date || todayDate(), status: 'delivered' };
+        const nextReports = existing ? reports.map(x => String(x.jobId) === String(repair.id) ? report : x) : [report, ...reports];
+        set(K.DELIVERY, nextReports);
+        const updated = repairs.map(r => String(r.id) === String(repair.id) ? { ...r, status: 'delivered', deliveredAt: now } : r);
+        set(K.R, updated);
+        logActivity('delivery', repair.id, { customerName: repair.customerName });
+        renderHist(); updateCounters();
+        msg.innerHTML = '<span style="color:#059669;font-weight:700">✅ Delivery report saved / تقرير التسليم تم حفظه</span>';
+      } else {
+        const reports = get(K.NOTREPAIR, []);
+        const existing = reports.find(x => String(x.jobId) === String(repair.id));
+        const report = existing ? { ...existing, createdAt: now, status: 'not_repair' } : { id: 'N' + now, jobId: String(repair.id), invoiceId: String(repair.id), customerName: repair.customerName, mobileNumber: repair.mobileNumber, phoneModel: repair.phoneModel, problem: repair.phoneProblem, price: repair.price || 0, createdAt: now, date: repair.date || todayDate(), status: 'not_repair' };
+        const nextReports = existing ? reports.map(x => String(x.jobId) === String(repair.id) ? report : x) : [report, ...reports];
+        set(K.NOTREPAIR, nextReports);
+        const updated = repairs.map(r => String(r.id) === String(repair.id) ? { ...r, status: 'not_repair', notRepairAt: now } : r);
+        set(K.R, updated);
+        logActivity('not_repair', repair.id, { customerName: repair.customerName });
+        renderHist(); updateCounters();
+        msg.innerHTML = '<span style="color:#dc2626;font-weight:700">✅ Not Repair report saved / تقرير ليس إصلاح تم حفظه</span>';
+      }
+      setTimeout(() => closeReportAction(), 650);
+    }
+
     // ==================== HISTORY ====================
     const histq = document.getElementById('histq');
     histq.addEventListener('input', renderHist);
@@ -1357,6 +1546,7 @@
       const rows = get(K.R, []).filter(r => !q || [r.id, r.customerName, r.mobileNumber, r.phoneModel, r.phoneProblem].some(x => (x || '').toLowerCase().includes(q)));
       document.getElementById('histBody').innerHTML = rows.map(r => {
         const isDelivered = r.status === 'delivered';
+        const isNotRepair = r.status === 'not_repair';
         const isRepeat = checkRepeat(r);
         return `<tr class="border-t ${isDelivered ? 'bg-green-50' : ''} ${isRepeat ? 'bg-amber-50' : ''}">
       <td class="p-2 font-mono font-bold">#${r.id}</td>
@@ -1365,7 +1555,7 @@
       <td class="p-2">${r.phoneModel}</td>
       <td class="p-2 max-w-xs truncate" title="${r.phoneProblem}">${r.phoneProblem}</td>
       <td class="p-2 font-semibold text-blue-700">${r.price || 0} SAR</td>
-      <td class="p-2">${isDelivered ? '<span class="delivered-badge">DELIVERED</span>' : '<span class="status-pending">PENDING</span>'}</td>
+      <td class="p-2">${isDelivered ? '<span class="delivered-badge">DELIVERED</span>' : isNotRepair ? '<span class="status-pending" style="background:#fee2e2;color:#b91c1c">NOT REPAIR</span>' : '<span class="status-pending">PENDING</span>'}</td>
       <td class="p-2 text-xs">${r.date}</td>
       <td class="p-2">
         <div style="display:flex;gap:4px;flex-wrap:wrap">
@@ -1393,11 +1583,11 @@
       showToast('✅ Marked as Delivered / تم التسليم');
     }
 
-    function reprint(r) { current = r; const pa = document.getElementById('printArea'); pa.innerHTML = renderInvoice(r); setTimeout(() => { try { JsBarcode('#bcInv', r.id, { height: 30, width: 1.5, fontSize: 9, margin: 0 }) } catch (e) { } window.print(); setTimeout(() => { pa.innerHTML = ''; current = null }, 300) }, 80) }
+    function reprint(r) { logActivity('print_invoice', r.id); current = r; const pa = document.getElementById('printArea'); pa.innerHTML = renderInvoice(r); setTimeout(() => { try { JsBarcode('#bcInv', r.id, { height: 30, width: 1.5, fontSize: 9, margin: 0 }) } catch (e) { } window.print(); setTimeout(() => { pa.innerHTML = ''; current = null }, 300) }, 80) }
 
-    function reprintSticker(r) { current = r; const pa = document.getElementById('printArea'); pa.innerHTML = renderSticker(r); setTimeout(() => { try { JsBarcode('#bcSt', r.mobileNumber.replace(/\D/g, '') || r.id, { height: 20, width: 1.2, displayValue: false, margin: 0 }) } catch (e) { } window.print(); setTimeout(() => { pa.innerHTML = ''; current = null }, 300) }, 80) }
+    function reprintSticker(r) { logActivity('print_sticker', r.id); current = r; const pa = document.getElementById('printArea'); pa.innerHTML = renderSticker(r); setTimeout(() => { try { JsBarcode('#bcSt', r.mobileNumber.replace(/\D/g, '') || r.id, { height: 20, width: 1.2, displayValue: false, margin: 0 }) } catch (e) { } window.print(); setTimeout(() => { pa.innerHTML = ''; current = null }, 300) }, 80) }
 
-    function sendWAHistory(r) {
+    function sendWAHistory(r) { logActivity('whatsapp', r.id);
       const msg = '*RESTART · Repair Slip*\nInvoice: #' + r.id + '\nName: ' + r.customerName + '\nMobile: ' + r.mobileNumber + '\nModel: ' + r.phoneModel + '\nProblem: ' + r.phoneProblem + '\nPrice: ' + r.price + ' SAR\nDate: ' + r.date;
       window.open('https://wa.me/' + r.mobileNumber.replace(/\D/g, '') + '?text=' + encodeURIComponent(msg), '_blank');
     }
@@ -1832,6 +2022,9 @@
       const data = {
         repairs: get(K.R, []),
         stock: get(K.S, []),
+        deliveryReports: get(K.DELIVERY, []),
+        notRepairReports: get(K.NOTREPAIR, []),
+        activities: get(K.ACTIVITY, []),
         counter: localStorage.getItem(K.C) || '17',
         timestamp: new Date().toISOString()
       };
@@ -1857,9 +2050,12 @@
       document.body.classList.add('dark');
     }
 
+    // Start Firebase cloud sync after the app functions are loaded.
+    initCloudSync();
+
     // Auto backup every 30 minutes
     setInterval(() => {
-      const data = { repairs: get(K.R, []), stock: get(K.S, []), timestamp: new Date().toISOString() };
+      const data = { repairs: get(K.R, []), stock: get(K.S, []), deliveryReports: get(K.DELIVERY, []), notRepairReports: get(K.NOTREPAIR, []), activities: get(K.ACTIVITY, []), timestamp: new Date().toISOString() };
       localStorage.setItem(K.BACKUP, JSON.stringify(data));
     }, 30 * 60 * 1000);
 
